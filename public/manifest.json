@@ -1,0 +1,16 @@
+{
+  "name": "Arma Reforger Artillery Calc",
+  "short_name": "ArtyCalc",
+  "description": "Ballistic calculator for Arma Reforger artillery systems.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#121417",
+  "theme_color": "#d1a65c",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,68 +1,127 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { BallisticCalculator, BallisticData, FiringSolution, CalculatorInput } from './logic/ballistics';
+import { usePersistentState } from './logic/usePersistentState';
 import data from './data/ballistic_data.json';
+
+// Components
+import WeaponSelector from './components/WeaponSelector';
+import CoordinateInput from './components/CoordinateInput';
+import ResultDisplay from './components/ResultDisplay';
+import TacticalMap from './components/TacticalMap';
 
 const calculator = new BallisticCalculator(data as BallisticData);
 
-const App: React.FC = () => {
-  const [weaponId, setWeaponId] = useState(data.weaponSystems[0].id);
-  const [shellType, setShellType] = useState('');
-  const [chargeLevel, setChargeLevel] = useState<number | undefined>(undefined);
-  
-  const [playerGrid, setPlayerGrid] = useState('');
-  const [playerZ, setPlayerZ] = useState(0);
-  const [targetGrid, setTargetGrid] = useState('');
-  const [targetZ, setTargetZ] = useState(0);
+const gridToPos = (grid: string) => {
+  const cleaned = grid.replace(/[\s/,]/g, '');
+  if (cleaned.length === 6) {
+    return {
+      x: parseInt(cleaned.substring(0, 3), 10) * 100 + 50,
+      y: parseInt(cleaned.substring(3, 6), 10) * 100 + 50
+    };
+  } else if (cleaned.length === 8) {
+    return {
+      x: parseInt(cleaned.substring(0, 4), 10) * 10 + 5,
+      y: parseInt(cleaned.substring(4, 8), 10) * 10 + 5
+    };
+  }
+  return null;
+};
 
+const posToGrid = (x: number, y: number, precision: 6 | 8 = 6) => {
+  if (precision === 6) {
+    const gx = Math.floor(x / 100).toString().padStart(3, '0');
+    const gy = Math.floor(y / 100).toString().padStart(3, '0');
+    return `${gx}${gy}`;
+  } else {
+    const gx = Math.floor(x / 10).toString().padStart(4, '0');
+    const gy = Math.floor(y / 10).toString().padStart(4, '0');
+    return `${gx}${gy}`;
+  }
+};
+
+const App: React.FC = () => {
+  // Persistent State
+  const [weaponId, setWeaponId] = usePersistentState('weaponId', data.weaponSystems[0].id);
+  const [shellType, setShellType] = usePersistentState('shellType', '');
+  
+  const [playerGrid, setPlayerGrid] = usePersistentState('playerGrid', '000000');
+  const [playerZ, setPlayerZ] = usePersistentState('playerZ', 0);
+  const [playerPos, setPlayerPos] = usePersistentState('playerPos', { x: 0, y: 0 });
+
+  const [targetGrid, setTargetGrid] = usePersistentState('targetGrid', '010010');
+  const [targetZ, setTargetZ] = usePersistentState('targetZ', 0);
+  const [targetPos, setTargetPos] = usePersistentState('targetPos', { x: 1000, y: 1000 });
+
+  // Transient State
   const [solution, setSolution] = useState<FiringSolution | null>(null);
+  const [distance, setDistance] = useState(0);
 
   const currentWeapon = useMemo(() => 
     data.weaponSystems.find(w => w.id === weaponId), 
   [weaponId]);
 
-  useEffect(() => {
-    if (currentWeapon) {
-      if (currentWeapon.systemType === 'mortar') {
-        setShellType(currentWeapon.shellTypes![0].type);
-        setChargeLevel(undefined); // Auto-charge
-      } else {
-        setShellType(currentWeapon.projectileTypes![0].type);
-        setChargeLevel(undefined);
-      }
-    }
-  }, [weaponId, currentWeapon]);
-
-  const parseGrid = (grid: string) => {
-    const cleaned = grid.replace(/[\s/,]/g, '');
-    if (cleaned.length === 6) {
-      return {
-        x: parseInt(cleaned.substring(0, 3), 10) * 100 + 50,
-        y: parseInt(cleaned.substring(3, 6), 10) * 100 + 50
-      };
-    } else if (cleaned.length === 8) {
-      return {
-        x: parseInt(cleaned.substring(0, 4), 10) * 10,
-        y: parseInt(cleaned.substring(4, 8), 10) * 10
-      };
-    }
-    return null;
+  // Sync grid to pos (on manual input)
+  const handlePlayerGridChange = (grid: string) => {
+    setPlayerGrid(grid);
+    const pos = gridToPos(grid);
+    if (pos) setPlayerPos(pos);
   };
 
-  useEffect(() => {
-    const pPos = parseGrid(playerGrid);
-    const tPos = parseGrid(targetGrid);
+  const handleTargetGridChange = (grid: string) => {
+    setTargetGrid(grid);
+    const pos = gridToPos(grid);
+    if (pos) setTargetPos(pos);
+  };
 
-    if (pPos && tPos && currentWeapon) {
-      const dist = Math.sqrt(Math.pow(tPos.x - pPos.x, 2) + Math.pow(tPos.y - pPos.y, 2));
-      const bearing = (Math.atan2(tPos.x - pPos.x, tPos.y - pPos.y) * 180 / Math.PI + 360) % 360;
+  // Sync pos to grid (on map drag)
+  const handlePlayerMove = (pos: { x: number, y: number }) => {
+    setPlayerPos(pos);
+    setPlayerGrid(posToGrid(pos.x, pos.y, playerGrid.length === 8 ? 8 : 6));
+  };
+
+  const handleTargetMove = (pos: { x: number, y: number }) => {
+    setTargetPos(pos);
+    setTargetGrid(posToGrid(pos.x, pos.y, targetGrid.length === 8 ? 8 : 6));
+  };
+
+  // Handle weapon/shell defaults
+  useEffect(() => {
+    if (currentWeapon) {
+      const availableShells = currentWeapon.systemType === 'mortar' 
+        ? currentWeapon.shellTypes || []
+        : currentWeapon.projectileTypes || [];
+      
+      if (availableShells.length === 0) return;
+
+      const shellExists = availableShells.some(s => {
+        const id = 'type' in s ? s.type : (s as any).id;
+        return id === shellType;
+      });
+      
+      if (!shellType || !shellExists) {
+        const first = availableShells[0];
+        const defaultShell = 'type' in first ? first.type : (first as any).id;
+        setShellType(defaultShell);
+      }
+    }
+  }, [weaponId, currentWeapon, shellType, setShellType]);
+
+  // Calculate firing solution
+  useEffect(() => {
+    if (currentWeapon && playerPos && targetPos) {
+      const dx = targetPos.x - playerPos.x;
+      const dy = targetPos.y - playerPos.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      setDistance(Math.round(dist));
+      
+      const bearing = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
       
       const input: CalculatorInput = {
         distance: dist,
         heightDifference: targetZ - playerZ,
         bearing: bearing,
         weaponId: weaponId,
-        shellType: shellType,
-        chargeLevel: chargeLevel
+        shellType: shellType
       };
 
       try {
@@ -74,101 +133,55 @@ const App: React.FC = () => {
       }
     } else {
       setSolution(null);
+      setDistance(0);
     }
-  }, [playerGrid, playerZ, targetGrid, targetZ, weaponId, shellType, chargeLevel, currentWeapon]);
+  }, [playerPos, playerZ, targetPos, targetZ, weaponId, shellType, currentWeapon]);
 
   return (
     <div className="app-container">
       <header className="top-strip">
         <div className="title">ARMA REFORGER | НАВОДЧИК WEB</div>
-        <div style={{color: 'var(--text-faint)', fontSize: '0.8rem'}}>v2.4.0-web</div>
+        <div style={{ color: 'var(--text-faint)', fontSize: '0.8rem' }}>v2.5.0-map</div>
       </header>
 
-      <div className="card">
-        <div className="section-title">Орудие и боеприпас</div>
-        <div className="grid-inputs">
-          <div className="input-group">
-            <label>Система</label>
-            <select value={weaponId} onChange={(e) => setWeaponId(e.target.value)}>
-              {data.weaponSystems.map(w => (
-                <option key={w.id} value={w.id}>{w.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="input-group">
-            <label>Тип снаряда</label>
-            <select value={shellType} onChange={(e) => setShellType(e.target.value)}>
-              {currentWeapon?.systemType === 'mortar' 
-                ? currentWeapon.shellTypes?.map(s => <option key={s.type} value={s.type}>{s.name}</option>)
-                : currentWeapon?.projectileTypes?.map(p => <option key={p.type} value={p.type}>{p.name}</option>)
-              }
-            </select>
-          </div>
-        </div>
-      </div>
+      <TacticalMap 
+        playerPos={playerPos}
+        targetPos={targetPos}
+        onPlayerMove={handlePlayerMove}
+        onTargetMove={handleTargetMove}
+      />
+
+      <WeaponSelector 
+        data={data as BallisticData}
+        weaponId={weaponId}
+        shellType={shellType}
+        onWeaponChange={setWeaponId}
+        onShellChange={setShellType}
+        currentWeapon={currentWeapon as any}
+      />
 
       <div className="grid-inputs">
-        <div className="card">
-          <div className="section-title">Позиция орудия</div>
-          <div className="input-group" style={{marginBottom: '10px'}}>
-            <label>Квадрат (058/071)</label>
-            <input value={playerGrid} onChange={(e) => setPlayerGrid(e.target.value)} placeholder="058/071" />
-          </div>
-          <div className="input-group">
-            <label>Высота (м)</label>
-            <input type="number" value={playerZ} onChange={(e) => setPlayerZ(Number(e.target.value))} />
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="section-title">Позиция цели</div>
-          <div className="input-group" style={{marginBottom: '10px'}}>
-            <label>Квадрат (062/075)</label>
-            <input value={targetGrid} onChange={(e) => setTargetGrid(e.target.value)} placeholder="062/075" />
-          </div>
-          <div className="input-group">
-            <label>Высота (м)</label>
-            <input type="number" value={targetZ} onChange={(e) => setTargetZ(Number(e.target.value))} />
-          </div>
-        </div>
+        <CoordinateInput 
+          title="Позиция орудия"
+          grid={playerGrid}
+          z={playerZ}
+          onGridChange={handlePlayerGridChange}
+          onZChange={setPlayerZ}
+        />
+        <CoordinateInput 
+          title="Позиция цели"
+          grid={targetGrid}
+          z={targetZ}
+          onGridChange={handleTargetGridChange}
+          onZChange={setTargetZ}
+        />
       </div>
 
-      {solution && solution.inRange ? (
-        <div className="card" style={{borderLeft: '4px solid var(--accent-green)'}}>
-          <div className="section-title">Решение для стрельбы</div>
-          <div className="results-grid">
-            <div className="result-item">
-              <div className="result-label">Дистанция</div>
-              <div className="result-value">{Math.round(solution.minRange === solution.maxRange ? solution.minRange : (solution.elevationCorrection ? 0 : 0))} {Math.round(Math.sqrt(Math.pow(parseGrid(targetGrid)!.x - parseGrid(playerGrid)!.x, 2) + Math.pow(parseGrid(targetGrid)!.y - parseGrid(playerGrid)!.y, 2)))}м</div>
-            </div>
-            <div className="result-item">
-              <div className="result-label">Азимут</div>
-              <div className="result-value">{solution.azimuthMils} <span style={{fontSize: '1rem', color: 'var(--text-faint)'}}>({solution.azimuth}°)</span></div>
-            </div>
-            <div className="result-item">
-              <div className="result-label">Прицел</div>
-              <div className="result-value elevation">{solution.elevation}</div>
-            </div>
-            <div className="result-item">
-              <div className="result-label">Время (TOF)</div>
-              <div className="result-value">{solution.timeOfFlight}с</div>
-            </div>
-            {solution.charge !== undefined && (
-              <div className="result-item">
-                <div className="result-label">Заряд</div>
-                <div className="result-value" style={{color: 'var(--accent)'}}>{solution.charge}</div>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="card" style={{borderLeft: '4px solid var(--accent-hot)', opacity: targetGrid && playerGrid ? 1 : 0.5}}>
-          <div className="section-title">Состояние</div>
-          <div style={{color: 'var(--accent-hot)', fontWeight: 'bold'}}>
-            {playerGrid && targetGrid ? (solution?.error || "Вне зоны досягаемости") : "Ожидание координат..."}
-          </div>
-        </div>
-      )}
+      <ResultDisplay 
+        solution={solution}
+        distance={distance}
+        isActive={!!(playerGrid && targetGrid)}
+      />
     </div>
   );
 };

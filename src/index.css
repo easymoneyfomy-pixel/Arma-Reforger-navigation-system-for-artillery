@@ -117,8 +117,35 @@ input:focus, select:focus {
   color: var(--accent-hot);
 }
 
-@media (max-width: 600px) {
-  .grid-inputs {
-    grid-template-columns: 1fr;
-  }
+.map-container {
+  height: 500px;
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.leaflet-container {
+  background: var(--bg-input) !important;
+}
+
+.marker-label {
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: var(--accent);
+  font-weight: bold;
+  text-shadow: 1px 1px 2px black;
+  font-size: 0.9rem;
+}
+
+.map-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.leaflet-cursor-crosshair {
+  cursor: crosshair;
 }
