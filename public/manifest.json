@@ -4,10 +4,12 @@
   "description": "Professional ballistic calculator and tactical map for Arma Reforger artillery systems.",
   "start_url": ".",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "minimal-ui"],
   "orientation": "any",
   "background_color": "#121417",
   "theme_color": "#d1a65c",
-  "categories": ["utilities", "games"],
+  "categories": ["utilities", "games", "navigation"],
+  "screenshots": [],
   "icons": [
     {
       "src": "favicon.svg",

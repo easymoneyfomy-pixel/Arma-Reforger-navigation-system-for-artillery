@@ -1,7 +1,7 @@
 {
   "name": "arma-reforger-calculator-web",
   "private": true,
-  "version": "2.4.0",
+  "version": "2.5.0",
   "homepage": "https://easymoneyfomy-pixel.github.io/Arma-Reforger-navigation-system-for-artillery",
   "type": "module",
   "scripts": {
