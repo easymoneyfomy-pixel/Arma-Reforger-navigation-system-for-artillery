@@ -8,6 +8,7 @@ import WeaponSelector from './components/WeaponSelector';
 import CoordinateInput from './components/CoordinateInput';
 import ResultDisplay from './components/ResultDisplay';
 import TacticalMap from './components/TacticalMap';
+import ArtilleryCalculator from './components/ArtilleryCalculator';
 
 const calculator = new BallisticCalculator(data as BallisticData);
 
@@ -213,6 +214,8 @@ const App: React.FC = () => {
           onZChange={setTargetZ}
         />
       </div>
+
+      <ArtilleryCalculator />
 
       <ResultDisplay 
         solution={solution}
