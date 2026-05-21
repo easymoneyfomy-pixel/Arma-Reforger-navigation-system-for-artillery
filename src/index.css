@@ -197,3 +197,40 @@ input:focus, select:focus {
 .leaflet-cursor-crosshair {
   cursor: crosshair;
 }
+
+/* ─── MAP SELECTOR TABS ─── */
+.map-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.map-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 18px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  transition: all 0.15s;
+}
+.map-tab:hover {
+  border-color: var(--accent);
+  color: var(--text-main);
+}
+.map-tab.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(209, 166, 92, 0.10);
+}
+.map-dims {
+  font-size: 8px;
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
+}

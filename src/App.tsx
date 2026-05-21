@@ -9,6 +9,7 @@ import CoordinateInput from './components/CoordinateInput';
 import ResultDisplay from './components/ResultDisplay';
 import TacticalMap from './components/TacticalMap';
 import ArtilleryCalculator from './components/ArtilleryCalculator';
+import MapSelector from './components/MapSelector';
 
 const calculator = new BallisticCalculator(data as unknown as BallisticData);
 
@@ -44,6 +45,8 @@ const App: React.FC = () => {
   // Persistent State
   const [weaponId, setWeaponId] = usePersistentState('weaponId', data.weaponSystems[0].id);
   const [shellType, setShellType] = usePersistentState('shellType', '');
+  const [trajectoryMode, setTrajectoryMode] = usePersistentState('trajectoryMode', 'auto');
+  const [mapId, setMapId] = usePersistentState('mapId', 'everon');
   
   const [playerGrid, setPlayerGrid] = usePersistentState('playerGrid', '000000');
   const [playerZ, setPlayerZ] = usePersistentState('playerZ', 0);
@@ -122,7 +125,8 @@ const App: React.FC = () => {
         heightDifference: targetZ - playerZ,
         bearing: bearing,
         weaponId: weaponId,
-        shellType: shellType
+        shellType: shellType,
+        trajectoryMode: trajectoryMode,
       };
 
       try {
@@ -136,7 +140,7 @@ const App: React.FC = () => {
       setSolution(null);
       setDistance(0);
     }
-  }, [playerPos, playerZ, targetPos, targetZ, weaponId, shellType, currentWeapon]);
+  }, [playerPos, playerZ, targetPos, targetZ, weaponId, shellType, trajectoryMode, currentWeapon]);
 
   // State Synchronization with URL Hash
   useEffect(() => {
@@ -182,11 +186,14 @@ const App: React.FC = () => {
         <div style={{ color: 'var(--text-faint)', fontSize: '0.8rem' }}>v2.5.0-map</div>
       </header>
 
+      <MapSelector mapId={mapId} onMapChange={setMapId} />
+
       <TacticalMap 
         playerPos={playerPos}
         targetPos={targetPos}
         onPlayerMove={handlePlayerMove}
         onTargetMove={handleTargetMove}
+        mapId={mapId}
       />
 
       <WeaponSelector 
@@ -196,6 +203,8 @@ const App: React.FC = () => {
         onWeaponChange={setWeaponId}
         onShellChange={setShellType}
         currentWeapon={currentWeapon as any}
+        trajectoryMode={trajectoryMode}
+        onTrajectoryChange={setTrajectoryMode}
       />
 
       <div className="grid-inputs">
@@ -220,6 +229,7 @@ const App: React.FC = () => {
         targetPos={{ ...targetPos, alt: targetZ }}
         weaponId={weaponId}
         shellType={shellType}
+        calculator={calculator}
       />
 
       <ResultDisplay 

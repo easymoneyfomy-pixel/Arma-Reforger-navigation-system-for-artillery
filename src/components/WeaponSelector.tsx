@@ -8,6 +8,8 @@ interface WeaponSelectorProps {
   onWeaponChange: (id: string) => void;
   onShellChange: (type: string) => void;
   currentWeapon: WeaponSystem | undefined;
+  trajectoryMode?: string;
+  onTrajectoryChange?: (mode: string) => void;
 }
 
 const WeaponSelector: React.FC<WeaponSelectorProps> = ({ 
@@ -16,8 +18,12 @@ const WeaponSelector: React.FC<WeaponSelectorProps> = ({
   shellType, 
   onWeaponChange, 
   onShellChange,
-  currentWeapon 
+  currentWeapon,
+  trajectoryMode = 'auto',
+  onTrajectoryChange,
 }) => {
+  const isMortar = currentWeapon?.systemType === 'mortar';
+
   return (
     <div className="card">
       <div className="section-title">Орудие и боеприпас</div>
@@ -39,6 +45,16 @@ const WeaponSelector: React.FC<WeaponSelectorProps> = ({
             }
           </select>
         </div>
+        {isMortar && onTrajectoryChange && (
+          <div className="input-group">
+            <label>Траектория</label>
+            <select value={trajectoryMode} onChange={(e) => onTrajectoryChange(e.target.value)}>
+              <option value="auto">Авто</option>
+              <option value="high">Высокая дуга</option>
+              <option value="low">Плоская дуга</option>
+            </select>
+          </div>
+        )}
       </div>
     </div>
   );

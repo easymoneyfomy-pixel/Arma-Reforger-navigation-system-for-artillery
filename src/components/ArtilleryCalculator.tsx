@@ -1,17 +1,18 @@
 import React, { useMemo } from 'react';
 import { BallisticCalculator, FiringSolution, CalculatorInput } from '../logic/ballistics';
-import ballisticData from '../data/ballistic_data.json';
-
-const calculator = new BallisticCalculator(ballisticData as any);
 
 interface ArtilleryCalculatorProps {
     playerPos: { x: number, y: number, alt: number };
     targetPos: { x: number, y: number, alt: number };
     weaponId: string;
     shellType: string;
+    calculator?: BallisticCalculator;
 }
 
-const ArtilleryCalculator: React.FC<ArtilleryCalculatorProps> = ({ playerPos, targetPos, weaponId, shellType }) => {
+const ArtilleryCalculator: React.FC<ArtilleryCalculatorProps> = ({ 
+    playerPos, targetPos, weaponId, shellType, 
+    calculator: extCalculator 
+}) => {
     const solution = useMemo(() => {
         const dx = targetPos.x - playerPos.x;
         const dy = targetPos.y - playerPos.y;
@@ -27,11 +28,11 @@ const ArtilleryCalculator: React.FC<ArtilleryCalculatorProps> = ({ playerPos, ta
         };
 
         try {
-            return calculator.calculateFiringSolution(input);
+            return (extCalculator || new BallisticCalculator()).calculateFiringSolution(input);
         } catch {
             return null;
         }
-    }, [playerPos, targetPos, weaponId, shellType]);
+    }, [playerPos, targetPos, weaponId, shellType, extCalculator]);
 
     if (!solution || solution.error) return null;
 
