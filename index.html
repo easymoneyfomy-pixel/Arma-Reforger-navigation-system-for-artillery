@@ -1,23 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- === ПРОИЗВОДИТЕЛЬНОСТЬ === -->
+    <!-- Preconnect: браузер заранее открывает соединение с CDN -->
+    <link rel="preconnect" href="https://unpkg.com" crossorigin />
+    <!-- Preload критичных ресурсов -->
+    <link rel="preload" href="data:application/octet-stream;base64,aW1wb3J0IFJlYWN0IGZyb20gJ3JlYWN0JzsNCmltcG9ydCBSZWFjdERPTSBmcm9tICdyZWFjdC1kb20vY2xpZW50JzsNCmltcG9ydCBBcHAgZnJvbSAnLi9BcHAnOw0KaW1wb3J0ICcuL2luZGV4LmNzcyc7DQoNClJlYWN0RE9NLmNyZWF0ZVJvb3QoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3Jvb3QnKSEpLnJlbmRlcigNCiAgPFJlYWN0LlN0cmljdE1vZGU+DQogICAgPEFwcCAvPg0KICA8L1JlYWN0LlN0cmljdE1vZGU+DQopOw0K" as="script" />
+    <link rel="preload" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          as="style" crossorigin />
+
+    <!-- PWA -->
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#d1a65c" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- SEO минимум -->
+    <meta name="description" content="Арта-наводчик для Arma Reforger — карта, координаты, расчёт угла." />
+    <meta name="robots" content="noindex" /><!-- убери если нужна индексация -->
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin="" />
+
     <title>Arma Reforger | Наводчик Web</title>
+
     <style>
-      body {
-        margin: 0;
-        background-color: #121417;
-        color: #e0e0e0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      /* === CSS ПЕРЕМЕННЫЕ — меняй тему в одном месте === */
+      :root {
+        --bg:        #121417;
+        --surface:   #1a1d21;
+        --accent:    #d1a65c;
+        --accent-dim:#8c6e3a;
+        --text:      #e0e0e0;
+        --text-muted:#6b7280;
+        --font-ui:   -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                     Helvetica, Arial, sans-serif;
+        --font-mono: "Courier New", "Lucida Console", monospace;
       }
+
+      *, *::before, *::after { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background-color: var(--bg);
+        color: var(--text);
+        font-family: var(--font-ui);
+        /* Плавный рендеринг шрифтов */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        /* Запрет выделения на интерфейсных элементах */
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      #root {
+        height: 100%;
+        /* Экран загрузки пока React не примонтировался */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* === ЗАГЛУШКА — скрывается после гидратации React === */
+      #splash {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        opacity: 1;
+        transition: opacity 0.4s ease;
+      }
+      #splash.hidden { opacity: 0; pointer-events: none; }
+
+      #splash-title {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      /* Простой спиннер-прицел через CSS */
+      .reticle {
+        width: 48px;
+        height: 48px;
+        border: 1px solid var(--accent-dim);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 1.2s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
     </style>
-    <script type="module" crossorigin src="./assets/index-de8c4013.js"></script>
-    <link rel="stylesheet" href="./assets/index-11dce152.css">
+    <script type="module" crossorigin src="./assets/index-4cd40012.js"></script>
+    <link rel="stylesheet" href="./assets/index-f219b2f0.css">
   </head>
+
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Видно ДО загрузки JS. React удалит или скроет через useEffect. -->
+      <div id="splash" aria-hidden="true">
+        <div class="reticle"></div>
+        <div id="splash-title">Наводчик · Загрузка</div>
+      </div>
+    </div>
+
     
+
+    <!-- Service Worker — регистрируем только в продакшене -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/sw.js')
+            .catch(err => console.warn('[SW] Ошибка регистрации:', err));
+        });
+      }
+    </script>
   </body>
 </html>
