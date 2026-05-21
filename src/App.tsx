@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { BallisticCalculator, BallisticData, FiringSolution, CalculatorInput } from './logic/ballistics';
 import { usePersistentState } from './logic/usePersistentState';
-import data from './data/ballistic_data.json';
+import data from './data/official_ballistic_data.json';
 
 // Components
 import WeaponSelector from './components/WeaponSelector';
@@ -10,7 +10,7 @@ import ResultDisplay from './components/ResultDisplay';
 import TacticalMap from './components/TacticalMap';
 import ArtilleryCalculator from './components/ArtilleryCalculator';
 
-const calculator = new BallisticCalculator(data as BallisticData);
+const calculator = new BallisticCalculator(data as unknown as BallisticData);
 
 const gridToPos = (grid: string) => {
   const cleaned = grid.replace(/[\s/,]/g, '');
