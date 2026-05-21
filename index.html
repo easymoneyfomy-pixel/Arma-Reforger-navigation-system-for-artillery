@@ -1,127 +1,755 @@
-<!DOCTYPE html>
-<html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- === ПРОИЗВОДИТЕЛЬНОСТЬ === -->
-    <!-- Preconnect: браузер заранее открывает соединение с CDN -->
-    <link rel="preconnect" href="https://unpkg.com" crossorigin />
-    <!-- Preload критичных ресурсов -->
-    <link rel="preload" href="/src/main.tsx" as="script" />
-    <link rel="preload" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          as="style" crossorigin />
+<style>
+  :root {
+    --bg: #0e1012;
+    --surface: #161a1e;
+    --surface2: #1e2328;
+    --accent: #c8a04e;
+    --accent-dim: #7a5e2a;
+    --accent-glow: rgba(200,160,78,0.12);
+    --green: #4a8c52;
+    --red: #8c3a3a;
+    --text: #d8d4cc;
+    --muted: #6b7280;
+    --border: rgba(200,160,78,0.18);
+    --font-mono: "Courier New", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: transparent; color: var(--text); font-family: var(--font-sans, sans-serif); }
 
-    <!-- PWA -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#d1a65c" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  .app { display: flex; flex-direction: column; gap: 0; min-height: 600px; }
 
-    <!-- SEO минимум -->
-    <meta name="description" content="Арта-наводчик для Arma Reforger — карта, координаты, расчёт угла." />
-    <meta name="robots" content="noindex" /><!-- убери если нужна индексация -->
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 0.5px solid var(--border);
+  }
+  .topbar-title {
+    font-family: var(--font-mono);
+    font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .topbar-status {
+    font-size: 11px; color: var(--muted); font-family: var(--font-mono);
+  }
 
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-          crossorigin="" />
+  .main-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 0;
+    flex: 1;
+  }
 
-    <title>Arma Reforger | Наводчик Web</title>
+  .sidebar {
+    background: var(--surface);
+    border-right: 0.5px solid var(--border);
+    display: flex; flex-direction: column; gap: 0;
+    overflow-y: auto;
+  }
 
-    <style>
-      /* === CSS ПЕРЕМЕННЫЕ — меняй тему в одном месте === */
-      :root {
-        --bg:        #121417;
-        --surface:   #1a1d21;
-        --accent:    #d1a65c;
-        --accent-dim:#8c6e3a;
-        --text:      #e0e0e0;
-        --text-muted:#6b7280;
-        --font-ui:   -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                     Helvetica, Arial, sans-serif;
-        --font-mono: "Courier New", "Lucida Console", monospace;
-      }
+  .section {
+    border-bottom: 0.5px solid var(--border);
+    padding: 14px 16px;
+  }
+  .section-title {
+    font-size: 10px; font-family: var(--font-mono);
+    letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .section-title::before {
+    content: ''; display: block; width: 12px; height: 1px; background: var(--accent);
+  }
 
-      *, *::before, *::after { box-sizing: border-box; }
+  .coord-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .coord-label {
+    font-size: 11px; color: var(--muted); font-family: var(--font-mono);
+    margin-bottom: 3px; display: flex; justify-content: space-between;
+  }
+  .coord-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 
-      html, body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        background-color: var(--bg);
-        color: var(--text);
-        font-family: var(--font-ui);
-        /* Плавный рендеринг шрифтов */
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        /* Запрет выделения на интерфейсных элементах */
-        -webkit-tap-highlight-color: transparent;
-      }
+  input[type=number], select {
+    width: 100%;
+    background: var(--surface2);
+    border: 0.5px solid rgba(200,160,78,0.25);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type=number]:focus, select:focus {
+    border-color: var(--accent);
+  }
 
-      #root {
-        height: 100%;
-        /* Экран загрузки пока React не примонтировался */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+  .set-btn {
+    width: 100%;
+    padding: 8px;
+    background: transparent;
+    border: 0.5px solid var(--accent-dim);
+    border-radius: 4px;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    margin-top: 6px;
+  }
+  .set-btn:hover { background: var(--accent-glow); border-color: var(--accent); }
+  .set-btn.active { background: var(--accent); color: #0e1012; font-weight: 500; }
 
-      /* === ЗАГЛУШКА — скрывается после гидратации React === */
-      #splash {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 16px;
-        opacity: 1;
-        transition: opacity 0.4s ease;
-      }
-      #splash.hidden { opacity: 0; pointer-events: none; }
+  .result-panel {
+    padding: 0 16px 14px;
+    margin-top: 4px;
+  }
+  .result-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 6px 0;
+    border-bottom: 0.5px solid rgba(200,160,78,0.1);
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-key { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+  .result-val {
+    font-size: 16px; font-weight: 500; font-family: var(--font-mono);
+    color: var(--accent);
+  }
+  .result-val.big { font-size: 22px; }
 
-      #splash-title {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        letter-spacing: 0.4em;
-        text-transform: uppercase;
-        color: var(--accent);
-      }
+  .copy-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;
+  }
 
-      /* Простой спиннер-прицел через CSS */
-      .reticle {
-        width: 48px;
-        height: 48px;
-        border: 1px solid var(--accent-dim);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin 1.2s linear infinite;
-      }
-      @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
-  </head>
+  .map-area {
+    position: relative;
+    background: #0a0c0e;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .map-toolbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    background: rgba(14,16,18,0.85);
+    border-bottom: 0.5px solid var(--border);
+    font-size: 11px; color: var(--muted); font-family: var(--font-mono);
+    flex-wrap: wrap;
+  }
+  .map-mode-btn {
+    padding: 4px 10px;
+    border-radius: 3px;
+    border: 0.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 11px; font-family: var(--font-mono);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .map-mode-btn.on { background: var(--accent); color: #0e1012; border-color: var(--accent); }
 
-  <body>
-    <div id="root">
-      <!-- Видно ДО загрузки JS. React удалит или скроет через useEffect. -->
-      <div id="splash" aria-hidden="true">
-        <div class="reticle"></div>
-        <div id="splash-title">Наводчик · Загрузка</div>
+  #mapCanvas {
+    flex: 1;
+    cursor: crosshair;
+    display: block;
+  }
+
+  .legend {
+    padding: 6px 12px;
+    background: rgba(14,16,18,0.9);
+    border-top: 0.5px solid var(--border);
+    display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10px; color: var(--muted); font-family: var(--font-mono);
+  }
+  .legend-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+
+  .pill {
+    display: inline-block; padding: 1px 7px; border-radius: 10px;
+    font-size: 10px; font-family: var(--font-mono);
+    background: rgba(200,160,78,0.15); color: var(--accent);
+    border: 0.5px solid var(--accent-dim);
+  }
+  .pill.danger { background: rgba(140,60,60,0.2); color: #c47070; border-color: #6a3030; }
+  .pill.ok { background: rgba(74,140,82,0.2); color: #7abf82; border-color: #3a6040; }
+
+  .no-fire {
+    padding: 10px 16px;
+    font-size: 11px; color: var(--muted); font-family: var(--font-mono);
+    text-align: center; letter-spacing: 0.05em;
+  }
+  .azimuth-arc {
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-dasharray: 4 3;
+    opacity: 0.6;
+  }
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-title">⬡ Наводчик · Arma Reforger</div>
+    <div class="topbar-status" id="statusLine">Выберите позицию орудия</div>
+  </div>
+
+  <div class="main-grid">
+    <div class="sidebar">
+
+      <div class="section">
+        <div class="section-title">Орудие</div>
+        <div class="coord-group">
+          <div class="coord-label"><span>Позиция</span> <span class="pill" id="gunPill">не задана</span></div>
+          <div class="coord-row">
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:3px">X (Вост.)</div>
+              <input type="number" id="gunX" placeholder="0" step="1">
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Y (Сев.)</div>
+              <input type="number" id="gunY" placeholder="0" step="1">
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Высота (м)</div>
+            <input type="number" id="gunAlt" placeholder="0" step="1">
+          </div>
+          <button class="set-btn" id="setGunBtn" onclick="setGun()">Установить позицию орудия</button>
+        </div>
       </div>
+
+      <div class="section">
+        <div class="section-title">Цель</div>
+        <div class="coord-group">
+          <div class="coord-label"><span>Координаты</span> <span class="pill" id="tgtPill">не задана</span></div>
+          <div class="coord-row">
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:3px">X (Вост.)</div>
+              <input type="number" id="tgtX" placeholder="0" step="1">
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Y (Сев.)</div>
+              <input type="number" id="tgtY" placeholder="0" step="1">
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Высота (м)</div>
+            <input type="number" id="tgtAlt" placeholder="0" step="1">
+          </div>
+          <button class="set-btn" id="setTgtBtn" onclick="setTarget()">Установить цель</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Тип орудия</div>
+        <select id="weaponSel" onchange="recalc()">
+          <option value="mortar">Миномёт M252 (81мм)</option>
+          <option value="m119">Гаубица M119 (105мм)</option>
+          <option value="d30">Гаубица Д-30 (122мм)</option>
+          <option value="custom">Пользовательский</option>
+        </select>
+        <div id="customRange" style="display:none;margin-top:8px">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Мин. дальность (м)</div>
+          <input type="number" id="customMin" placeholder="100" value="100" step="10">
+          <div style="font-size:10px;color:var(--muted);margin:5px 0 3px">Макс. дальность (м)</div>
+          <input type="number" id="customMax" placeholder="5000" value="5000" step="10">
+        </div>
+      </div>
+
+      <div class="section" id="resultsSection">
+        <div class="section-title">Данные стрельбы</div>
+        <div id="resultsBody">
+          <div class="no-fire">Задайте орудие и цель</div>
+        </div>
+      </div>
+
     </div>
 
-    <script type="module" src="/src/main.tsx"></script>
+    <div class="map-area">
+      <div class="map-toolbar">
+        <span>Режим клика:</span>
+        <button class="map-mode-btn on" id="modeGunBtn" onclick="setMode('gun')">🎯 Орудие</button>
+        <button class="map-mode-btn" id="modeTgtBtn" onclick="setMode('target')">💥 Цель</button>
+        <span style="margin-left:auto">ЛКМ — поставить метку · ПКМ — очистить</span>
+      </div>
+      <canvas id="mapCanvas"></canvas>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#c8a04e"></div> Орудие
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#c05050"></div> Цель
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:rgba(200,160,78,0.4);border:1px dashed #c8a04e"></div> Линия огня
+        </div>
+        <div class="legend-item" style="margin-left:auto;color:var(--accent)">
+          <span id="scaleLabel" style="font-family:var(--font-mono);font-size:10px">1px = 10м</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-    <!-- Service Worker — регистрируем только в продакшене -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker
-            .register('/sw.js')
-            .catch(err => console.warn('[SW] Ошибка регистрации:', err));
-        });
-      }
-    </script>
-  </body>
-</html>
+<script>
+const WEAPONS = {
+  mortar: { name:'M252 81мм', min:60, max:5700 },
+  m119:   { name:'M119 105мм', min:500, max:11500 },
+  d30:    { name:'Д-30 122мм', min:400, max:15300 },
+  custom: { name:'Пользовательский', min:100, max:5000 }
+};
+
+let gun = null, target = null;
+let mode = 'gun';
+let scale = 10; // 1px = scale meters
+let panX = 0, panY = 0;
+let isDragging = false, dragStart = null, panStart = null;
+let gridSize = 100; // meters per grid cell
+
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  const parent = canvas.parentElement;
+  canvas.width  = parent.clientWidth;
+  canvas.height = parent.clientHeight - canvas.offsetTop;
+  draw();
+}
+window.addEventListener('resize', resize);
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeGunBtn').className = 'map-mode-btn' + (m==='gun'?' on':'');
+  document.getElementById('modeTgtBtn').className = 'map-mode-btn' + (m==='target'?' on':'');
+}
+
+function worldToCanvas(wx, wy) {
+  return {
+    x: (wx - panX) / scale + canvas.width/2,
+    y: canvas.height/2 - (wy - panY) / scale
+  };
+}
+function canvasToWorld(cx, cy) {
+  return {
+    x: (cx - canvas.width/2) * scale + panX,
+    y: (canvas.height/2 - cy) * scale + panY
+  };
+}
+
+canvas.addEventListener('mousedown', e => {
+  if (e.button === 1 || (e.button === 0 && e.altKey)) {
+    isDragging = true;
+    dragStart = {x: e.clientX, y: e.clientY};
+    panStart = {x: panX, y: panY};
+    canvas.style.cursor = 'grabbing';
+    return;
+  }
+  if (e.button === 2) {
+    if (mode === 'gun') { gun = null; document.getElementById('gunPill').textContent='не задана'; document.getElementById('gunPill').className='pill'; }
+    else { target = null; document.getElementById('tgtPill').textContent='не задана'; document.getElementById('tgtPill').className='pill'; }
+    recalc(); draw(); return;
+  }
+  if (e.button === 0) {
+    const rect = canvas.getBoundingClientRect();
+    const w = canvasToWorld(e.clientX - rect.left, e.clientY - rect.top);
+    placePoint(Math.round(w.x), Math.round(w.y));
+  }
+});
+canvas.addEventListener('mousemove', e => {
+  if (isDragging) {
+    panX = panStart.x - (e.clientX - dragStart.x) * scale;
+    panY = panStart.y + (e.clientY - dragStart.y) * scale;
+    draw(); return;
+  }
+  const rect = canvas.getBoundingClientRect();
+  const w = canvasToWorld(e.clientX - rect.left, e.clientY - rect.top);
+  document.getElementById('statusLine').textContent = `X:${Math.round(w.x)}  Y:${Math.round(w.y)}`;
+  draw();
+  // Draw crosshair
+  ctx.strokeStyle = 'rgba(200,160,78,0.3)';
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([4,4]);
+  const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,canvas.height); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(canvas.width,cy); ctx.stroke();
+  ctx.setLineDash([]);
+});
+canvas.addEventListener('mouseup', e => {
+  if (isDragging) { isDragging = false; canvas.style.cursor = 'crosshair'; }
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 1.15 : 0.87;
+  scale = Math.max(1, Math.min(100, scale * factor));
+  document.getElementById('scaleLabel').textContent = `1px = ${scale.toFixed(1)}м`;
+  draw();
+}, {passive: false});
+
+function placePoint(wx, wy) {
+  if (mode === 'gun') {
+    gun = {x: wx, y: wy, alt: parseFloat(document.getElementById('gunAlt').value)||0};
+    document.getElementById('gunX').value = wx;
+    document.getElementById('gunY').value = wy;
+    document.getElementById('gunPill').textContent = `${wx}, ${wy}`;
+    document.getElementById('gunPill').className = 'pill ok';
+    setGunBtn();
+  } else {
+    target = {x: wx, y: wy, alt: parseFloat(document.getElementById('tgtAlt').value)||0};
+    document.getElementById('tgtX').value = wx;
+    document.getElementById('tgtY').value = wy;
+    document.getElementById('tgtPill').textContent = `${wx}, ${wy}`;
+    document.getElementById('tgtPill').className = 'pill ok';
+    setTgtBtn();
+  }
+  recalc(); draw();
+}
+
+function setGun() {
+  const x = parseFloat(document.getElementById('gunX').value)||0;
+  const y = parseFloat(document.getElementById('gunY').value)||0;
+  const alt = parseFloat(document.getElementById('gunAlt').value)||0;
+  gun = {x, y, alt};
+  document.getElementById('gunPill').textContent = `${x}, ${y}`;
+  document.getElementById('gunPill').className = 'pill ok';
+  setGunBtn();
+  recalc(); draw();
+}
+function setTarget() {
+  const x = parseFloat(document.getElementById('tgtX').value)||0;
+  const y = parseFloat(document.getElementById('tgtY').value)||0;
+  const alt = parseFloat(document.getElementById('tgtAlt').value)||0;
+  target = {x, y, alt};
+  document.getElementById('tgtPill').textContent = `${x}, ${y}`;
+  document.getElementById('tgtPill').className = 'pill ok';
+  setTgtBtn();
+  recalc(); draw();
+}
+
+function setGunBtn() {
+  document.getElementById('setGunBtn').className = 'set-btn active';
+  setTimeout(()=>document.getElementById('setGunBtn').className='set-btn', 800);
+}
+function setTgtBtn() {
+  document.getElementById('setTgtBtn').className = 'set-btn active';
+  setTimeout(()=>document.getElementById('setTgtBtn').className='set-btn', 800);
+}
+
+document.getElementById('weaponSel').addEventListener('change', function() {
+  document.getElementById('customRange').style.display = this.value==='custom'?'block':'none';
+  recalc();
+});
+document.getElementById('customMin').addEventListener('input', recalc);
+document.getElementById('customMax').addEventListener('input', recalc);
+document.getElementById('gunAlt').addEventListener('input', ()=>{ if(gun) gun.alt=parseFloat(document.getElementById('gunAlt').value)||0; recalc(); });
+document.getElementById('tgtAlt').addEventListener('input', ()=>{ if(target) target.alt=parseFloat(document.getElementById('tgtAlt').value)||0; recalc(); });
+
+function calcAzimuth(from, to) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  let az = Math.atan2(dx, dy) * 180 / Math.PI;
+  if (az < 0) az += 360;
+  return az;
+}
+function calcDistance(from, to) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  return Math.sqrt(dx*dx + dy*dy);
+}
+
+function recalc() {
+  const body = document.getElementById('resultsBody');
+  if (!gun || !target) {
+    body.innerHTML = '<div class="no-fire">Задайте орудие и цель</div>';
+    return;
+  }
+  const wsel = document.getElementById('weaponSel').value;
+  let wep = {...WEAPONS[wsel]};
+  if (wsel === 'custom') {
+    wep.min = parseFloat(document.getElementById('customMin').value)||100;
+    wep.max = parseFloat(document.getElementById('customMax').value)||5000;
+  }
+
+  const dist = calcDistance(gun, target);
+  const az   = calcAzimuth(gun, target);
+  const dAlt = (target.alt||0) - (gun.alt||0);
+
+  const inRange = dist >= wep.min && dist <= wep.max;
+  const rangePill = inRange
+    ? '<span class="pill ok">В зоне</span>'
+    : '<span class="pill danger">Вне зоны</span>';
+
+  // Elevation angle for mortar (simplified, fixed muzzle velocity reference)
+  // For display purposes: approximate elevation from distance + dAlt
+  let elevStr = '—';
+  if (wsel === 'mortar') {
+    // M252: approximate charge-based elevation (mil)
+    // Simple formula: given distance, suggest elevation in mils (6400 mil = 360°)
+    const elevDeg = 45 + Math.atan(dAlt / Math.max(dist,1)) * 180/Math.PI;
+    const elevMil = Math.round(elevDeg * 6400/360);
+    elevStr = `${elevMil} мил / ${elevDeg.toFixed(1)}°`;
+  } else {
+    // For howitzers, show rough elevation angle
+    const elev = Math.atan2(dAlt, Math.max(dist,1)) * 180/Math.PI;
+    elevStr = `${(elev).toFixed(1)}°`;
+  }
+
+  // Compass point
+  const dirs = ['С','СВ','В','ЮВ','Ю','ЮЗ','З','СЗ'];
+  const compass = dirs[Math.round(az/45)%8];
+
+  body.innerHTML = `
+    <div class="result-panel">
+      <div class="result-row">
+        <span class="result-key">АЗИМУТ</span>
+        <span class="result-val big">${az.toFixed(1)}°</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Направление</span>
+        <span class="result-val">${compass} &nbsp;<span style="font-size:12px;color:var(--muted)">${(az*6400/360).toFixed(0)} мил</span></span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">ДАЛЬНОСТЬ</span>
+        <span class="result-val">${Math.round(dist)} м &nbsp;${rangePill}</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">ПЕРЕПАД ВЫСОТ</span>
+        <span class="result-val" style="${dAlt>0?'color:#7abf82':dAlt<0?'color:#c47070':''}">${dAlt>0?'+':''}${Math.round(dAlt)} м</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">УГОЛ (УВН)</span>
+        <span class="result-val">${elevStr}</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Орудие</span>
+        <span class="result-val" style="font-size:12px">${wep.name}</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Зона (${wep.min}–${wep.max}м)</span>
+        <span class="result-val" style="font-size:12px">${inRange?'✓ Досягает':'✗ Не досягает'}</span>
+      </div>
+    </div>
+    <div style="padding:0 16px 10px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <button class="set-btn" onclick="copyResults()">Копировать данные</button>
+      <button class="set-btn" onclick="clearAll()">Сбросить</button>
+    </div>
+  `;
+}
+
+function copyResults() {
+  if (!gun || !target) return;
+  const dist = calcDistance(gun, target);
+  const az = calcAzimuth(gun, target);
+  const dAlt = (target.alt||0) - (gun.alt||0);
+  const wsel = document.getElementById('weaponSel').value;
+  const wep = WEAPONS[wsel];
+  const text = [
+    `=== АРТА ДАННЫЕ ===`,
+    `Орудие: X${gun.x} Y${gun.y} Alt${gun.alt||0}`,
+    `Цель:   X${target.x} Y${target.y} Alt${target.alt||0}`,
+    `Азимут: ${az.toFixed(1)}° (${(az*6400/360).toFixed(0)} мил)`,
+    `Дальность: ${Math.round(dist)} м`,
+    `Перепад: ${dAlt>0?'+':''}${Math.round(dAlt)} м`,
+  ].join('\n');
+  navigator.clipboard.writeText(text).catch(()=>{});
+}
+
+function clearAll() {
+  gun = null; target = null;
+  document.getElementById('gunPill').textContent='не задана';
+  document.getElementById('gunPill').className='pill';
+  document.getElementById('tgtPill').textContent='не задана';
+  document.getElementById('tgtPill').className='pill';
+  document.getElementById('resultsBody').innerHTML='<div class="no-fire">Задайте орудие и цель</div>';
+  draw();
+}
+
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  ctx.fillStyle = '#0a0c0e';
+  ctx.fillRect(0,0,W,H);
+
+  // Grid
+  const cellPx = gridSize / scale;
+  ctx.strokeStyle = 'rgba(200,160,78,0.07)';
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([]);
+
+  const startX = (((-panX/scale + W/2) % cellPx) + cellPx) % cellPx;
+  const startY = (((panY/scale + H/2) % cellPx) + cellPx) % cellPx;
+
+  for (let x = startX - cellPx; x < W + cellPx; x += cellPx) {
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+  }
+  for (let y = startY - cellPx; y < H + cellPx; y += cellPx) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+
+  // Major grid (10x)
+  ctx.strokeStyle = 'rgba(200,160,78,0.15)';
+  ctx.lineWidth = 0.5;
+  const majCell = cellPx * 10;
+  const majStartX = ((((-panX/scale + W/2) % majCell) + majCell) % majCell);
+  const majStartY = ((((panY/scale + H/2) % majCell) + majCell) % majCell);
+  for (let x = majStartX - majCell; x < W + majCell; x += majCell) {
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+  }
+  for (let y = majStartY - majCell; y < H + majCell; y += majCell) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+
+  // Origin cross
+  const o = worldToCanvas(0,0);
+  ctx.strokeStyle = 'rgba(200,160,78,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(o.x-10,o.y); ctx.lineTo(o.x+10,o.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(o.x,o.y-10); ctx.lineTo(o.x,o.y+10); ctx.stroke();
+
+  // Fire line
+  if (gun && target) {
+    const gp = worldToCanvas(gun.x, gun.y);
+    const tp = worldToCanvas(target.x, target.y);
+    const dist = calcDistance(gun, target);
+    const az = calcAzimuth(gun, target);
+    const wsel = document.getElementById('weaponSel').value;
+    let wep = {...WEAPONS[wsel]};
+    const inRange = dist >= wep.min && dist <= wep.max;
+
+    // Max range circle
+    ctx.strokeStyle = 'rgba(200,160,78,0.12)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([4,4]);
+    const rPx = wep.max / scale;
+    ctx.beginPath(); ctx.arc(gp.x, gp.y, rPx, 0, Math.PI*2); ctx.stroke();
+    // Min range circle
+    const rMinPx = wep.min / scale;
+    ctx.strokeStyle = 'rgba(200,100,100,0.15)';
+    ctx.beginPath(); ctx.arc(gp.x, gp.y, rMinPx, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Fire line
+    ctx.strokeStyle = inRange ? 'rgba(200,160,78,0.55)' : 'rgba(200,80,80,0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(gp.x,gp.y); ctx.lineTo(tp.x,tp.y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Azimuth arc
+    ctx.strokeStyle = 'rgba(200,160,78,0.4)';
+    ctx.lineWidth = 1;
+    const arcR = Math.min(50, dist/scale*0.4);
+    const northAngle = -Math.PI/2;
+    const azAngle = northAngle + az * Math.PI/180;
+    ctx.beginPath();
+    ctx.arc(gp.x, gp.y, arcR, northAngle, azAngle, false);
+    ctx.stroke();
+    // North indicator
+    ctx.strokeStyle = 'rgba(200,160,78,0.3)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([3,3]);
+    ctx.beginPath();
+    ctx.moveTo(gp.x, gp.y);
+    ctx.lineTo(gp.x, gp.y - arcR - 10);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Mid-line distance label
+    const mx = (gp.x+tp.x)/2, my = (gp.y+tp.y)/2;
+    ctx.fillStyle = '#0a0c0e';
+    ctx.fillRect(mx-32, my-9, 64, 16);
+    ctx.fillStyle = 'rgba(200,160,78,0.9)';
+    ctx.font = '10px "Courier New"';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.round(dist)}м`, mx, my+3);
+  }
+
+  // Draw gun
+  if (gun) {
+    const p = worldToCanvas(gun.x, gun.y);
+    ctx.save();
+    ctx.translate(p.x, p.y);
+
+    // Outer ring
+    ctx.strokeStyle = 'rgba(200,160,78,0.4)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.arc(0,0,18,0,Math.PI*2); ctx.stroke();
+
+    // Crosshair
+    ctx.strokeStyle = '#c8a04e';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-10,0); ctx.lineTo(-4,0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(4,0); ctx.lineTo(10,0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(0,-4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,4); ctx.lineTo(0,10); ctx.stroke();
+    // Center dot
+    ctx.fillStyle = '#c8a04e';
+    ctx.beginPath(); ctx.arc(0,0,2.5,0,Math.PI*2); ctx.fill();
+
+    ctx.restore();
+
+    ctx.fillStyle = '#c8a04e';
+    ctx.font = 'bold 10px "Courier New"';
+    ctx.textAlign = 'center';
+    ctx.fillText('ОРУДИЕ', p.x, p.y - 22);
+    ctx.fillStyle = 'rgba(200,160,78,0.6)';
+    ctx.font = '9px "Courier New"';
+    ctx.fillText(`${gun.x}, ${gun.y}`, p.x, p.y + 26);
+  }
+
+  // Draw target
+  if (target) {
+    const p = worldToCanvas(target.x, target.y);
+    ctx.save();
+    ctx.translate(p.x, p.y);
+
+    // Explosion rings
+    ctx.strokeStyle = 'rgba(200,80,80,0.2)';
+    ctx.lineWidth = 0.5;
+    [20,28,36].forEach(r => {
+      ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke();
+    });
+    // X marker
+    ctx.strokeStyle = '#c05050';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-8,-8); ctx.lineTo(8,8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(8,-8); ctx.lineTo(-8,8); ctx.stroke();
+    // Center
+    ctx.fillStyle = '#c05050';
+    ctx.beginPath(); ctx.arc(0,0,2,0,Math.PI*2); ctx.fill();
+
+    ctx.restore();
+
+    ctx.fillStyle = '#c05050';
+    ctx.font = 'bold 10px "Courier New"';
+    ctx.textAlign = 'center';
+    ctx.fillText('ЦЕЛЬ', p.x, p.y - 40);
+    ctx.fillStyle = 'rgba(200,80,80,0.6)';
+    ctx.font = '9px "Courier New"';
+    ctx.fillText(`${target.x}, ${target.y}`, p.x, p.y + 44);
+  }
+
+  // North indicator top-right
+  const nx = W - 30, ny = 30;
+  ctx.strokeStyle = 'rgba(200,160,78,0.6)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(nx, ny+12); ctx.lineTo(nx, ny-12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(nx-4, ny-6); ctx.lineTo(nx, ny-14); ctx.lineTo(nx+4, ny-6); ctx.stroke();
+  ctx.fillStyle = 'rgba(200,160,78,0.9)';
+  ctx.font = 'bold 10px "Courier New"';
+  ctx.textAlign = 'center';
+  ctx.fillText('N', nx, ny+22);
+}
+
+resize();
+// Set initial view
+panX = 0; panY = 0;
+draw();
+</script>
