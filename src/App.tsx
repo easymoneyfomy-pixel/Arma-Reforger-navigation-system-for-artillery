@@ -215,7 +215,12 @@ const App: React.FC = () => {
         />
       </div>
 
-      <ArtilleryCalculator />
+      <ArtilleryCalculator 
+        playerPos={{ ...playerPos, alt: playerZ }}
+        targetPos={{ ...targetPos, alt: targetZ }}
+        weaponId={weaponId}
+        shellType={shellType}
+      />
 
       <ResultDisplay 
         solution={solution}
