@@ -36,6 +36,8 @@ export interface FiringSolution {
   tofCorrection?: number;
   minRange: number;
   maxRange: number;
+  spread?: number; // Circular Error Probable (meters)
+  chargeHint?: string; // e.g. "Low angle recommended"
   error?: string;
 }
 
@@ -211,6 +213,12 @@ export class BallisticCalculator {
 
     const milsPerDegree = weapon.milSystem.milsPerDegree;
 
+    // Tactical estimations
+    const spread = (input.distance / 1000) * (weapon.systemType === 'mortar' ? 12 : 5); // Approximate CEP in meters
+    let chargeHint = "";
+    if (input.distance > charge.maxRange * 0.9) chargeHint = "Near max range (consider higher charge)";
+    if (input.distance < charge.minRange * 1.1) chargeHint = "Near min range (consider lower charge)";
+
     return {
       inRange: true,
       charge: charge.level,
@@ -223,7 +231,9 @@ export class BallisticCalculator {
       timeOfFlight: parseFloat(correctedTOF.toFixed(1)),
       tofCorrection: parseFloat(tofCorrection.toFixed(2)),
       minRange: charge.minRange,
-      maxRange: charge.maxRange
+      maxRange: charge.maxRange,
+      spread: parseFloat(spread.toFixed(1)),
+      chargeHint: chargeHint
     };
   }
 

@@ -137,6 +137,43 @@ const App: React.FC = () => {
     }
   }, [playerPos, playerZ, targetPos, targetZ, weaponId, shellType, currentWeapon]);
 
+  // State Synchronization with URL Hash
+  useEffect(() => {
+    const syncToUrl = () => {
+      const state = {
+        w: weaponId,
+        s: shellType,
+        pg: playerGrid,
+        pz: playerZ,
+        tg: targetGrid,
+        tz: targetZ
+      };
+      const hash = btoa(JSON.stringify(state));
+      window.history.replaceState(null, '', `#${hash}`);
+    };
+
+    const timer = setTimeout(syncToUrl, 500);
+    return () => clearTimeout(timer);
+  }, [weaponId, shellType, playerGrid, playerZ, targetGrid, targetZ]);
+
+  // Load from URL Hash on mount
+  useEffect(() => {
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+      try {
+        const state = JSON.parse(atob(hash));
+        if (state.w) setWeaponId(state.w);
+        if (state.s) setShellType(state.s);
+        if (state.pg) handlePlayerGridChange(state.pg);
+        if (state.pz) setPlayerZ(state.pz);
+        if (state.tg) handleTargetGridChange(state.tg);
+        if (state.tz) setTargetZ(state.tz);
+      } catch (e) {
+        console.error("Failed to parse URL state", e);
+      }
+    }
+  }, []);
+
   return (
     <div className="app-container">
       <header className="top-strip">
