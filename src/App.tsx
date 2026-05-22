@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { BallisticCalculator, BallisticData, FiringSolution, CalculatorInput } from './logic/ballistics';
 import { usePersistentState } from './logic/usePersistentState';
-import data from './data/official_ballistic_data.json';
+
+// Import Arma Reforger data
+import reforgerData from './data/arma_reforger/official_ballistic_data.json';
+import { MAP_PROFILES as DEFAULT_MAP_PROFILES, DEFAULT_MAP } from './data/map_profiles';
 
 // Components
 import WeaponSelector from './components/WeaponSelector';
@@ -11,7 +14,7 @@ import TacticalMap from './components/TacticalMap';
 import ArtilleryCalculator from './components/ArtilleryCalculator';
 import MapSelector from './components/MapSelector';
 
-const calculator = new BallisticCalculator(data as unknown as BallisticData);
+const calculator = new BallisticCalculator(reforgerData as unknown as BallisticData);
 
 const gridToPos = (grid: string) => {
   const cleaned = grid.replace(/[\s/,]/g, '');
@@ -42,105 +45,105 @@ const posToGrid = (x: number, y: number, precision: 6 | 8 = 6) => {
 };
 
 const App: React.FC = () => {
-  // Persistent State
-  const [weaponId, setWeaponId] = usePersistentState('weaponId', data.weaponSystems[0].id);
-  const [shellType, setShellType] = usePersistentState('shellType', '');
-  const [trajectoryMode, setTrajectoryMode] = usePersistentState('trajectoryMode', 'auto');
-  const [mapId, setMapId] = usePersistentState('mapId', 'everon');
-  
-  const [playerGrid, setPlayerGrid] = usePersistentState('playerGrid', '000000');
-  const [playerZ, setPlayerZ] = usePersistentState('playerZ', 0);
-  const [playerPos, setPlayerPos] = usePersistentState('playerPos', { x: 0, y: 0 });
-
-  const [targetGrid, setTargetGrid] = usePersistentState('targetGrid', '010010');
-  const [targetZ, setTargetZ] = usePersistentState('targetZ', 0);
-  const [targetPos, setTargetPos] = usePersistentState('targetPos', { x: 1000, y: 1000 });
-
-  // Transient State
-  const [solution, setSolution] = useState<FiringSolution | null>(null);
-  const [distance, setDistance] = useState(0);
-
-  const currentWeapon = useMemo(() => 
-    data.weaponSystems.find(w => w.id === weaponId), 
-  [weaponId]);
-
-  // Sync grid to pos (on manual input)
-  const handlePlayerGridChange = (grid: string) => {
-    setPlayerGrid(grid);
-    const pos = gridToPos(grid);
-    if (pos) setPlayerPos(pos);
-  };
-
-  const handleTargetGridChange = (grid: string) => {
-    setTargetGrid(grid);
-    const pos = gridToPos(grid);
-    if (pos) setTargetPos(pos);
-  };
-
-  // Sync pos to grid (on map drag)
-  const handlePlayerMove = (pos: { x: number, y: number }) => {
-    setPlayerPos(pos);
-    setPlayerGrid(posToGrid(pos.x, pos.y, playerGrid.length === 8 ? 8 : 6));
-  };
-
-  const handleTargetMove = (pos: { x: number, y: number }) => {
-    setTargetPos(pos);
-    setTargetGrid(posToGrid(pos.x, pos.y, targetGrid.length === 8 ? 8 : 6));
-  };
-
-  // Handle weapon/shell defaults
-  useEffect(() => {
-    if (currentWeapon) {
-      const availableShells = currentWeapon.systemType === 'mortar' 
-        ? currentWeapon.shellTypes || []
-        : currentWeapon.projectileTypes || [];
-      
-      if (availableShells.length === 0) return;
-
-      const shellExists = availableShells.some(s => {
-        const id = 'type' in s ? s.type : (s as any).id;
-        return id === shellType;
-      });
-      
-      if (!shellType || !shellExists) {
-        const first = availableShells[0];
-        const defaultShell = 'type' in first ? first.type : (first as any).id;
-        setShellType(defaultShell);
-      }
-    }
-  }, [weaponId, currentWeapon, shellType, setShellType]);
-
-  // Calculate firing solution
-  useEffect(() => {
-    if (currentWeapon && playerPos && targetPos) {
-      const dx = targetPos.x - playerPos.x;
-      const dy = targetPos.y - playerPos.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      setDistance(Math.round(dist));
-      
-      const bearing = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
-      
-      const input: CalculatorInput = {
-        distance: dist,
-        heightDifference: targetZ - playerZ,
-        bearing: bearing,
-        weaponId: weaponId,
-        shellType: shellType,
-        trajectoryMode: trajectoryMode,
-      };
-
-      try {
-        const sol = calculator.calculateFiringSolution(input);
-        setSolution(sol);
-      } catch (e) {
-        console.error(e);
-        setSolution(null);
-      }
-    } else {
-      setSolution(null);
-      setDistance(0);
-    }
-  }, [playerPos, playerZ, targetPos, targetZ, weaponId, shellType, trajectoryMode, currentWeapon]);
+   // Persistent State
+   const [weaponId, setWeaponId] = usePersistentState('weaponId', reforgerData.weaponSystems[0].id);
+   const [shellType, setShellType] = usePersistentState('shellType', '');
+   const [trajectoryMode, setTrajectoryMode] = usePersistentState('trajectoryMode', 'auto');
+   const [mapId, setMapId] = usePersistentState('mapId', 'everon');
+   
+   const [playerGrid, setPlayerGrid] = usePersistentState('playerGrid', '000000');
+   const [playerZ, setPlayerZ] = usePersistentState('playerZ', 0);
+   const [playerPos, setPlayerPos] = usePersistentState('playerPos', { x: 0, y: 0 });
+ 
+   const [targetGrid, setTargetGrid] = usePersistentState('targetGrid', '010010');
+   const [targetZ, setTargetZ] = usePersistentState('targetZ', 0);
+   const [targetPos, setTargetPos] = usePersistentState('targetPos', { x: 1000, y: 1000 });
+ 
+   // Transient State
+   const [solution, setSolution] = useState<FiringSolution | null>(null);
+   const [distance, setDistance] = useState(0);
+ 
+   const currentWeapon = useMemo(() => 
+     reforgerData.weaponSystems.find(w => w.id === weaponId), 
+   [weaponId]);
+ 
+   // Sync grid to pos (on manual input)
+   const handlePlayerGridChange = (grid: string) => {
+     setPlayerGrid(grid);
+     const pos = gridToPos(grid);
+     if (pos) setPlayerPos(pos);
+   };
+ 
+   const handleTargetGridChange = (grid: string) => {
+     setTargetGrid(grid);
+     const pos = gridToPos(grid);
+     if (pos) setTargetPos(pos);
+   };
+ 
+   // Sync pos to grid (on map drag)
+   const handlePlayerMove = (pos: { x: number, y: number }) => {
+     setPlayerPos(pos);
+     setPlayerGrid(posToGrid(pos.x, pos.y, playerGrid.length === 8 ? 8 : 6));
+   };
+ 
+   const handleTargetMove = (pos: { x: number, y: number }) => {
+     setTargetPos(pos);
+     setTargetGrid(posToGrid(pos.x, pos.y, targetGrid.length === 8 ? 8 : 6));
+   };
+ 
+   // Handle weapon/shell defaults
+   useEffect(() => {
+     if (currentWeapon) {
+       const availableShells = currentWeapon.systemType === 'mortar' 
+         ? currentWeapon.shellTypes || []
+         : currentWeapon.projectileTypes || [];
+       
+       if (availableShells.length === 0) return;
+ 
+       const shellExists = availableShells.some(s => {
+         const id = 'type' in s ? s.type : (s as any).id;
+         return id === shellType;
+       });
+       
+       if (!shellType || !shellExists) {
+         const first = availableShells[0];
+         const defaultShell = 'type' in first ? first.type : (first as any).id;
+         setShellType(defaultShell);
+       }
+     }
+   }, [weaponId, currentWeapon, shellType, setShellType]);
+ 
+   // Calculate firing solution
+   useEffect(() => {
+     if (currentWeapon && playerPos && targetPos) {
+       const dx = targetPos.x - playerPos.x;
+       const dy = targetPos.y - playerPos.y;
+       const dist = Math.sqrt(dx * dx + dy * dy);
+       setDistance(Math.round(dist));
+       
+       const bearing = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
+       
+       const input: CalculatorInput = {
+         distance: dist,
+         heightDifference: targetZ - playerZ,
+         bearing: bearing,
+         weaponId: weaponId,
+         shellType: shellType,
+         trajectoryMode: trajectoryMode,
+       };
+ 
+       try {
+         const sol = calculator.calculateFiringSolution(input);
+         setSolution(sol);
+       } catch (e) {
+         console.error(e);
+         setSolution(null);
+       }
+     } else {
+       setSolution(null);
+       setDistance(0);
+     }
+   }, [playerPos, playerZ, targetPos, targetZ, weaponId, shellType, trajectoryMode, currentWeapon]);
 
   // State Synchronization with URL Hash
   useEffect(() => {
@@ -196,16 +199,16 @@ const App: React.FC = () => {
         mapId={mapId}
       />
 
-      <WeaponSelector 
-        data={data as BallisticData}
-        weaponId={weaponId}
-        shellType={shellType}
-        onWeaponChange={setWeaponId}
-        onShellChange={setShellType}
-        currentWeapon={currentWeapon as any}
-        trajectoryMode={trajectoryMode}
-        onTrajectoryChange={setTrajectoryMode}
-      />
+       <WeaponSelector 
+         data={reforgerData as BallisticData}
+         weaponId={weaponId}
+         shellType={shellType}
+         onWeaponChange={setWeaponId}
+         onShellChange={setShellType}
+         currentWeapon={currentWeapon as any}
+         trajectoryMode={trajectoryMode}
+         onTrajectoryChange={setTrajectoryMode}
+       />
 
       <div className="grid-inputs">
         <CoordinateInput 

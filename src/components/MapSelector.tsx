@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { MAP_PROFILES, DEFAULT_MAP } from '../data/map_profiles';
+import { MAP_PROFILES, DEFAULT_MAP } from '../data/arma_reforger/map_profiles';
 
 interface MapSelectorProps {
     mapId: string;

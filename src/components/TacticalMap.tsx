@@ -2,7 +2,7 @@
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap, Rectangle, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MAP_PROFILES, DEFAULT_MAP } from '../data/map_profiles';
+import { MAP_PROFILES, DEFAULT_MAP } from '../data/arma_reforger/map_profiles';
 
 // Fix Leaflet icon issue by using CDN or standard URLs
 const DefaultIcon = L.icon({
