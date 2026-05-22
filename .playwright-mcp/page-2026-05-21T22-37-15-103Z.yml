@@ -1,0 +1,84 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e5]
+        - generic [ref=e9]: Наводчик
+      - generic [ref=e11]: Arma Reforger · Artillery Fire Control
+    - generic [ref=e13]: "X: 4825 Y: -1510"
+  - generic [ref=e14]:
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: Орудие
+          - generic [ref=e19]: 0, 0
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - generic [ref=e22]: X (Вост.)
+            - spinbutton [ref=e23]: "0"
+          - generic [ref=e24]:
+            - generic [ref=e25]: Y (Сев.)
+            - spinbutton [ref=e26]: "0"
+        - generic [ref=e27]:
+          - generic [ref=e28]: Высота (м)
+          - spinbutton [ref=e29]: "0"
+        - button "Установить позицию орудия" [ref=e30] [cursor=pointer]
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - generic [ref=e33]: Цель
+          - generic [ref=e34]: 3000, 0
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e37]: X (Вост.)
+            - spinbutton [ref=e38]: "3000"
+          - generic [ref=e39]:
+            - generic [ref=e40]: Y (Сев.)
+            - spinbutton [ref=e41]: "0"
+        - generic [ref=e42]:
+          - generic [ref=e43]: Высота (м)
+          - spinbutton [ref=e44]: "0"
+        - button "Установить цель" [active] [ref=e45] [cursor=pointer]
+      - generic [ref=e46]:
+        - generic [ref=e48]: Тип орудия
+        - generic [ref=e49]:
+          - generic [ref=e50]: Выбор системы
+          - combobox [ref=e51] [cursor=pointer]:
+            - option "Миномёт M252 (81мм)"
+            - option "Гаубица M119 (105мм)"
+            - option "Гаубица Д-30 (122мм)" [selected]
+            - option "Пользовательский"
+      - generic [ref=e52]:
+        - generic [ref=e54]: Данные стрельбы
+        - generic [ref=e98]:
+          - generic [ref=e99]:
+            - generic [ref=e100]: Азимут
+            - generic [ref=e101]: 90.0°
+          - generic [ref=e102]:
+            - generic [ref=e103]: Направление
+            - generic [ref=e104]: В 1600 мил
+          - generic [ref=e105]:
+            - generic [ref=e106]: Дальность
+            - generic [ref=e107]: 3000 м В зоне
+          - generic [ref=e108]:
+            - generic [ref=e109]: Перепад высот
+            - generic [ref=e110]: 0 м
+          - generic [ref=e111]:
+            - generic [ref=e112]: Угол (УВН)
+            - generic [ref=e113]: 6.1°
+          - generic [ref=e114]:
+            - generic [ref=e115]: Орудие
+            - generic [ref=e116]: Д-30 122мм 400–15300м
+        - generic [ref=e95]:
+          - button "Копировать" [ref=e96] [cursor=pointer]
+          - button "Сбросить" [ref=e97] [cursor=pointer]
+    - generic [ref=e57]:
+      - generic [ref=e58]:
+        - generic [ref=e59]: "Режим:"
+        - button "Орудие" [ref=e60] [cursor=pointer]: Орудие
+        - button "Цель" [ref=e62] [cursor=pointer]: Цель
+        - generic [ref=e64]: ЛКМ — метка · ПКМ — очистить · Колесо — масштаб · Alt+ЛКМ — панорама
+      - generic [ref=e66]:
+        - generic [ref=e67]: Орудие
+        - generic [ref=e69]: Цель
+        - generic [ref=e71]: Линия огня
+        - generic [ref=e73]: 1px = 10м
