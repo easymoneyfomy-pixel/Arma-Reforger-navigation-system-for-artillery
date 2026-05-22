@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Наводчик · Arma Reforger</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #080b0d;
+    --surface:   #0d1217;
+    --surface2:  #131a21;
+    --surface3:  #1a2530;
+    --accent:    #d4a843;
+    --accent2:   #e8c060;
+    --accent-dim:#6b4f1a;
+    --accent-glow: rgba(212,168,67,0.10);
+    --accent-glow2: rgba(212,168,67,0.20);
+    --green:     #3d9952;
+    --green-dim: rgba(61,153,82,0.15);
+    --red:       #b84040;
+    --red-dim:   rgba(184,64,64,0.15);
+    --text:      #c8c2b8;
+    --text-bright: #e0d8cc;
+    --muted:     #4a5568;
+    --muted2:    #6b7a8d;
+    --border:    rgba(212,168,67,0.15);
+    --border2:   rgba(212,168,67,0.08);
+    --mono:      'Share Tech Mono', 'Courier New', monospace;
+    --sans:      'Rajdhani', sans-serif;
+    --scanline:  repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── TOPBAR ─── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 44px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .topbar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(212,168,67,0.04) 0%, transparent 40%);
+    pointer-events: none;
+  }
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo-hex {
+    width: 22px;
+    height: 22px;
+    position: relative;
+  }
+  .topbar-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .topbar-sep {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+  }
+  .topbar-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted2);
+    letter-spacing: 0.15em;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .topbar-status {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted2);
+    letter-spacing: 0.05em;
+  }
+  .topbar-coords {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(212,168,67,0.08);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 2px;
+    min-width: 160px;
+    text-align: center;
+  }
+
+  /* ─── MAIN LAYOUT ─── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-dim) transparent;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--accent-dim); border-radius: 2px; }
+
+  /* ─── SECTION ─── */
+  .section {
+    border-bottom: 1px solid var(--border2);
+    padding: 14px 16px;
+    position: relative;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 12px;
+    background: var(--accent);
+    border-radius: 1px;
+  }
+
+  /* ─── STATUS PILL ─── */
+  .pill {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    padding: 2px 8px;
+    border-radius: 2px;
+    background: rgba(212,168,67,0.08);
+    color: var(--muted2);
+    border: 1px solid var(--border);
+    text-transform: uppercase;
+  }
+  .pill.ok {
+    background: var(--green-dim);
+    color: #5dc478;
+    border-color: rgba(61,153,82,0.3);
+  }
+  .pill.danger {
+    background: var(--red-dim);
+    color: #e07070;
+    border-color: rgba(184,64,64,0.3);
+  }
+
+  /* ─── INPUTS ─── */
+  .field-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .coord-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .field-group {
+    margin-bottom: 8px;
+  }
+  input[type=number], select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid rgba(212,168,67,0.15);
+    border-radius: 3px;
+    color: var(--text-bright);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 7px 10px;
+    outline: none;
+    transition: all 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input[type=number]:focus, select:focus {
+    border-color: var(--accent);
+    background: var(--surface3);
+    box-shadow: 0 0 0 3px rgba(212,168,67,0.08);
+  }
+  input[type=number]:hover, select:hover {
+    border-color: rgba(212,168,67,0.3);
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23d4a843'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+    cursor: pointer;
+  }
+  select option {
+    background: var(--surface2);
+    color: var(--text-bright);
+  }
+
+  /* ─── BUTTONS ─── */
+  .set-btn {
+    width: 100%;
+    padding: 9px 12px;
+    background: transparent;
+    border: 1px solid rgba(212,168,67,0.25);
+    border-radius: 3px;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .set-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent-glow);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .set-btn:hover::before { opacity: 1; }
+  .set-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+  .set-btn.active {
+    background: var(--accent);
+    color: #080b0d;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .set-btn.active::before { opacity: 0; }
+
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .btn-danger {
+    border-color: rgba(184,64,64,0.3);
+    color: #b84040;
+  }
+  .btn-danger:hover {
+    border-color: #b84040;
+    color: #e07070;
+  }
+
+  /* ─── RESULTS ─── */
+  .results-body {
+    /* container for dynamic content */
+  }
+  .no-fire {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-align: center;
+    padding: 16px 0 8px;
+    text-transform: uppercase;
+  }
+  .result-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(212,168,67,0.07);
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-key {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .result-val {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--accent);
+    font-weight: 400;
+    text-align: right;
+  }
+  .result-val.big {
+    font-size: 24px;
+    color: var(--accent2);
+    letter-spacing: -0.01em;
+  }
+  .result-val.sub {
+    font-size: 11px;
+    color: var(--muted2);
+  }
+
+  /* ─── CUSTOM RANGE ─── */
+  .custom-range {
+    display: none;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border2);
+  }
+
+  /* ─── MAP AREA ─── */
+  .map-area {
+    position: relative;
+    background: var(--bg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── MAP TOOLBAR ─── */
+  .map-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .toolbar-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .map-mode-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted2);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .mode-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.15s;
+  }
+  .map-mode-btn:hover {
+    border-color: rgba(212,168,67,0.4);
+    color: var(--text);
+  }
+  .map-mode-btn.on {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .map-mode-btn.on .mode-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .map-mode-btn.tgt.on {
+    border-color: #b84040;
+    color: #e07070;
+  }
+  .map-mode-btn.tgt.on .mode-dot { background: #b84040; box-shadow: 0 0 6px #b84040; }
+
+  .toolbar-hint {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    margin-left: auto;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── CANVAS ─── */
+  #mapCanvas {
+    flex: 1;
+    cursor: crosshair;
+    display: block;
+  }
+
+  /* ─── LEGEND ─── */
+  .legend {
+    padding: 7px 14px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-dash {
+    width: 16px;
+    height: 1px;
+    background: rgba(212,168,67,0.5);
+    border-top: 1px dashed rgba(212,168,67,0.5);
+  }
+  .scale-label {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+
+  /* Corner decoration */
+  .corner-tl, .corner-tr, .corner-bl, .corner-br {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+  }
+  .corner-tl { top: 0; left: 0; border-top: 1px solid var(--accent); border-left: 1px solid var(--accent); }
+  .corner-tr { top: 0; right: 0; border-top: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+  .corner-bl { bottom: 0; left: 0; border-bottom: 1px solid var(--accent); border-left: 1px solid var(--accent); }
+  .corner-br { bottom: 0; right: 0; border-bottom: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+
+  /* pulse animation for active mode */
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">
+      <svg class="logo-hex" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="11,1 20,6 20,16 11,21 2,16 2,6" stroke="#d4a843" stroke-width="1" fill="none" opacity="0.5"/>
+        <polygon points="11,4 17,7.5 17,14.5 11,18 5,14.5 5,7.5" stroke="#d4a843" stroke-width="0.5" fill="none" opacity="0.3"/>
+        <circle cx="11" cy="11" r="2" fill="#d4a843" opacity="0.8"/>
+      </svg>
+      <span class="topbar-title">Наводчик</span>
+    </div>
+    <div class="topbar-sep"></div>
+    <span class="topbar-sub">Arma Reforger · Artillery Fire Control</span>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-coords" id="statusLine">Выберите позицию орудия</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-grid">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- ОРУДИЕ -->
+    <div class="section">
+      <div class="corner-tl"></div>
+      <div class="section-header">
+        <div class="section-title">Орудие</div>
+        <span class="pill" id="gunPill">не задана</span>
+      </div>
+      <div class="coord-row">
+        <div class="field-group">
+          <div class="field-label">X (Вост.)</div>
+          <input type="number" id="gunX" placeholder="0" step="1">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Y (Сев.)</div>
+          <input type="number" id="gunY" placeholder="0" step="1">
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Высота (м)</div>
+        <input type="number" id="gunAlt" placeholder="0" step="1">
+      </div>
+      <button class="set-btn" id="setGunBtn" onclick="setGun()">Установить позицию орудия</button>
+    </div>
+
+    <!-- ЦЕЛЬ -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Цель</div>
+        <span class="pill" id="tgtPill">не задана</span>
+      </div>
+      <div class="coord-row">
+        <div class="field-group">
+          <div class="field-label">X (Вост.)</div>
+          <input type="number" id="tgtX" placeholder="0" step="1">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Y (Сев.)</div>
+          <input type="number" id="tgtY" placeholder="0" step="1">
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Высота (м)</div>
+        <input type="number" id="tgtAlt" placeholder="0" step="1">
+      </div>
+      <button class="set-btn" id="setTgtBtn" onclick="setTarget()">Установить цель</button>
+    </div>
+
+    <!-- ТИП ОРУДИЯ -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Тип орудия</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Выбор системы</div>
+        <select id="weaponSel" onchange="onWeaponChange()">
+          <option value="mortar">Миномёт M252 (81мм)</option>
+          <option value="m119">Гаубица M119 (105мм)</option>
+          <option value="d30">Гаубица Д-30 (122мм)</option>
+          <option value="custom">Пользовательский</option>
+        </select>
+      </div>
+      <div class="custom-range" id="customRange">
+        <div class="coord-row">
+          <div class="field-group">
+            <div class="field-label">Мин. (м)</div>
+            <input type="number" id="customMin" placeholder="100" value="100" step="10">
+          </div>
+          <div class="field-group">
+            <div class="field-label">Макс. (м)</div>
+            <input type="number" id="customMax" placeholder="5000" value="5000" step="10">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ДАННЫЕ СТРЕЛЬБЫ -->
+    <div class="section" id="resultsSection" style="flex:1">
+      <div class="section-header">
+        <div class="section-title">Данные стрельбы</div>
+      </div>
+      <div id="resultsBody" class="results-body">
+        <div class="no-fire">— Задайте орудие и цель —</div>
+      </div>
+      <div class="btn-row" id="actionBtns" style="display:none">
+        <button class="set-btn" onclick="copyResults()">Копировать</button>
+        <button class="set-btn btn-danger" onclick="clearAll()">Сбросить</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAP AREA -->
+  <div class="map-area">
+    <div class="map-toolbar">
+      <span class="toolbar-label">Режим:</span>
+      <button class="map-mode-btn on" id="modeGunBtn" onclick="setMode('gun')">
+        <span class="mode-dot"></span>Орудие
+      </button>
+      <button class="map-mode-btn tgt" id="modeTgtBtn" onclick="setMode('target')">
+        <span class="mode-dot" style="background:#6b3030"></span>Цель
+      </button>
+      <span class="toolbar-hint">ЛКМ — метка · ПКМ — очистить · Колесо — масштаб · Alt+ЛКМ — панорама</span>
+    </div>
+    <canvas id="mapCanvas"></canvas>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#d4a843;box-shadow:0 0 6px #d4a843"></div>
+        Орудие
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#b84040;box-shadow:0 0 6px #b84040"></div>
+        Цель
+      </div>
+      <div class="legend-item">
+        <div class="legend-dash"></div>
+        Линия огня
+      </div>
+      <span class="scale-label" id="scaleLabel">1px = 10м</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const WEAPONS = {
+  mortar: { name: 'M252 81мм',        min: 60,  max: 5700  },
+  m119:   { name: 'M119 105мм',       min: 500, max: 11500 },
+  d30:    { name: 'Д-30 122мм',       min: 400, max: 15300 },
+  custom: { name: 'Пользовательский', min: 100, max: 5000  }
+};
+
+/* ── Ballistic table lookup for howitzers / MLRS ────────────────────────────
+   Values are [range_m, elevation_deg] sampled from the official ballistic data.
+   Howitzer tables store elevation in mils → converted to degrees in the JSON below.
+   Sources: official_ballistic_data.json
+     M119  HE Low  : [500,2.53°,1000,5.28°,2500,13.54°,6000,39.44°,11500,92.22°]
+     D30   HE Low  : [500,0.79°,1000,1.64°,2500,4.44°,6000,15.83°,15300,55.00°]
+   For mortars the elevation is computed geometrically (trajectory angle),
+   not looked up from a chart.
+──────────────────────────────────────────────────────────────────────────── */
+const BALLISTIC_ELEVATION = {
+  'm119': [[500,2.53],[1000,5.28],[2500,13.54],[6000,39.44],[11500,92.22]],
+  'd30':  [[500,0.79],[1000,1.64],[2500,4.44],[6000,15.83],[15300,55.00]]
+};
+
+function _asNum(v, fb) { return (v != null && !isNaN(+v)) ? +v : fb; }
+
+/* Linear interpolation in a [range, elevation_deg] table */
+function _interpDeg(table, dist) {
+  if (!table || table.length < 2) return null;
+  if (dist <= table[0][0]) return table[0][1];
+  if (dist >= table[table.length-1][0]) return table[table.length-1][1];
+  for (let i = 0; i < table.length - 1; i++) {
+    if (dist >= table[i][0] && dist <= table[i+1][0]) {
+      const t = (dist - table[i][0]) / (table[i+1][0] - table[i][0]);
+      return table[i][1] + t * (table[i+1][1] - table[i][1]);
+    }
+  }
+  return null;
+}
+
+let gun = null, target = null;
+let mode = 'gun';
+let scale = 10;
+let panX = 0, panY = 0;
+let isDragging = false, dragStart = null, panStart = null;
+const gridSize = 100;
+
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+let rafPending = false;
+function scheduleDraw() {
+  if (!rafPending) {
+    rafPending = true;
+    requestAnimationFrame(() => { rafPending = false; resize(); });
+  }
+}
+
+/* ── resize ── */
+function resize() {
+  const parent = canvas.parentElement;
+  canvas.width  = Math.floor(parent.clientWidth);
+  canvas.height = Math.max(480, Math.floor(parent.clientHeight - canvas.offsetTop));
+  draw();
+}
+new ResizeObserver(scheduleDraw).observe(canvas.parentElement);
+new ResizeObserver(scheduleDraw).observe(canvas);
+
+/* ── mode ── */
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeGunBtn').className = 'map-mode-btn' + (m === 'gun' ? ' on' : '');
+  document.getElementById('modeTgtBtn').className = 'map-mode-btn tgt' + (m === 'target' ? ' on' : '');
+}
+
+/* ── coordinate transform ── */
+function worldToCanvas(wx, wy) {
+  return {
+    x: (wx - panX) / scale + canvas.width  / 2,
+    y: canvas.height / 2 - (wy - panY) / scale
+  };
+}
+function canvasToWorld(cx, cy) {
+  return {
+    x: (cx - canvas.width  / 2) * scale + panX,
+    y: (canvas.height / 2 - cy) * scale + panY
+  };
+}
+
+/* ── canvas events ── */
+canvas.addEventListener('mousedown', e => {
+  if (e.button === 1 || (e.button === 0 && e.altKey)) {
+    isDragging = true;
+    dragStart = { x: e.clientX, y: e.clientY };
+    panStart  = { x: panX, y: panY };
+    canvas.style.cursor = 'grabbing';
+    return;
+  }
+  if (e.button === 2) {
+    if (mode === 'gun') {
+      gun = null;
+      setPill('gunPill', 'не задана', '');
+    } else {
+      target = null;
+      setPill('tgtPill', 'не задана', '');
+    }
+    recalc(); draw(); return;
+  }
+  if (e.button === 0) {
+    const rect = canvas.getBoundingClientRect();
+    const w = canvasToWorld(e.clientX - rect.left, e.clientY - rect.top);
+    placePoint(Math.round(w.x), Math.round(w.y));
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (isDragging) {
+    panX = panStart.x - (e.clientX - dragStart.x) * scale;
+    panY = panStart.y + (e.clientY - dragStart.y) * scale;
+    draw(); return;
+  }
+  const rect = canvas.getBoundingClientRect();
+  const w = canvasToWorld(e.clientX - rect.left, e.clientY - rect.top);
+  document.getElementById('statusLine').textContent = `X: ${Math.round(w.x)}   Y: ${Math.round(w.y)}`;
+  draw();
+  // crosshair (single path)
+  const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(212,168,67,0.18)';
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, canvas.height); ctx.moveTo(0, cy); ctx.lineTo(canvas.width, cy); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+});
+
+canvas.addEventListener('mouseup', () => {
+  if (isDragging) { isDragging = false; canvas.style.cursor = 'crosshair'; }
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 1.15 : 0.87;
+  scale = Math.max(1, Math.min(200, scale * factor));
+  document.getElementById('scaleLabel').textContent = `1px = ${scale.toFixed(scale < 10 ? 1 : 0)}м`;
+  draw();
+}, { passive: false });
+
+/* ── place point ── */
+function placePoint(wx, wy) {
+  if (mode === 'gun') {
+    gun = { x: wx, y: wy, alt: parseFloat(document.getElementById('gunAlt').value) || 0 };
+    document.getElementById('gunX').value = wx;
+    document.getElementById('gunY').value = wy;
+    setPill('gunPill', `${wx}, ${wy}`, 'ok');
+    flashBtn('setGunBtn');
+  } else {
+    target = { x: wx, y: wy, alt: parseFloat(document.getElementById('tgtAlt').value) || 0 };
+    document.getElementById('tgtX').value = wx;
+    document.getElementById('tgtY').value = wy;
+    setPill('tgtPill', `${wx}, ${wy}`, 'ok');
+    flashBtn('setTgtBtn');
+  }
+  recalc(); draw();
+}
+
+function setGun() {
+  const x   = parseFloat(document.getElementById('gunX').value)   || 0;
+  const y   = parseFloat(document.getElementById('gunY').value)   || 0;
+  const alt = parseFloat(document.getElementById('gunAlt').value) || 0;
+  gun = { x, y, alt };
+  setPill('gunPill', `${x}, ${y}`, 'ok');
+  flashBtn('setGunBtn');
+  recalc(); draw();
+}
+function setTarget() {
+  const x   = parseFloat(document.getElementById('tgtX').value)   || 0;
+  const y   = parseFloat(document.getElementById('tgtY').value)   || 0;
+  const alt = parseFloat(document.getElementById('tgtAlt').value) || 0;
+  target = { x, y, alt };
+  setPill('tgtPill', `${x}, ${y}`, 'ok');
+  flashBtn('setTgtBtn');
+  recalc(); draw();
+}
+
+function setPill(id, text, cls) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'pill' + (cls ? ' ' + cls : '');
+}
+function flashBtn(id) {
+  const btn = document.getElementById(id);
+  btn.classList.add('active');
+  setTimeout(() => btn.classList.remove('active'), 900);
+}
+
+/* ── weapon change ── */
+function onWeaponChange() {
+  const v = document.getElementById('weaponSel').value;
+  document.getElementById('customRange').style.display = v === 'custom' ? 'block' : 'none';
+  recalc();
+}
+document.getElementById('customMin').addEventListener('input', recalc);
+document.getElementById('customMax').addEventListener('input', recalc);
+document.getElementById('gunAlt').addEventListener('input', () => {
+  if (gun) gun.alt = parseFloat(document.getElementById('gunAlt').value) || 0;
+  recalc();
+});
+document.getElementById('tgtAlt').addEventListener('input', () => {
+  if (target) target.alt = parseFloat(document.getElementById('tgtAlt').value) || 0;
+  recalc();
+});
+
+/* ── calc helpers ── */
+function calcAzimuth(from, to) {
+  const dx = to.x - from.x, dy = to.y - from.y;
+  let az = Math.atan2(dx, dy) * 180 / Math.PI;
+  if (az < 0) az += 360;
+  return az;
+}
+function calcDistance(from, to) {
+  const dx = to.x - from.x, dy = to.y - from.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+/* ── recalc ── */
+function recalc() {
+  const body = document.getElementById('resultsBody');
+  const btns = document.getElementById('actionBtns');
+
+  if (!gun || !target) {
+    body.innerHTML = '<div class="no-fire">— Задайте орудие и цель —</div>';
+    btns.style.display = 'none';
+    return;
+  }
+
+  const wsel = document.getElementById('weaponSel').value;
+  let wep = { ...WEAPONS[wsel] };
+  if (wsel === 'custom') {
+    wep.min = parseFloat(document.getElementById('customMin').value) || 100;
+    wep.max = parseFloat(document.getElementById('customMax').value) || 5000;
+  }
+
+  const dist   = calcDistance(gun, target);
+  const az     = calcAzimuth(gun, target);
+  const azMil  = Math.round(az * 6400 / 360);
+  const dAlt   = (target.alt || 0) - (gun.alt || 0);
+  const inRange = dist >= wep.min && dist <= wep.max;
+
+  const dirs = ['С','СВ','В','ЮВ','Ю','ЮЗ','З','СЗ'];
+  const compass = dirs[Math.round(az / 45) % 8];
+
+  let elevStr = '—';
+  if (wsel === 'mortar') {
+    // Mortar: ballistic-table elevation derived geometrically
+    // (45° base + trajectory angle), corrected for height difference.
+    const elevDeg = 45 + Math.atan(dAlt / Math.max(dist, 1)) * 180 / Math.PI;
+    const elevMil = Math.round(elevDeg * 6400 / 360);
+    elevStr = `${elevMil} мил`;
+   } else {
+    // Howitzer / MLRS: look up elevation from ballistic chart
+    const table = BALLISTIC_ELEVATION[wsel];
+    if (table) {
+      const elev = _interpDeg(table, dist);
+      // Height correction: arc-sine approximation — good for typical height diffs
+      // where |dAlt| ≪ |dist|.
+      //  gun up (dAlt > 0) → lower elevation value (bullet fired downhill)
+      //  gun dn (dAlt < 0) → higher elevation value (bullet fired uphill)
+      let elevCorr = 0;
+      if (dAlt !== 0) {
+        elevCorr = Math.asin(Math.min(Math.abs(dAlt) / dist, 1)) * 180 / Math.PI;
+        elevCorr = dAlt < 0 ?  elevCorr   // uphill: raise angle  (+)
+                    :         -elevCorr;  // downhill: lower angle (−)
+      }
+      elevStr = `${(elev - elevCorr).toFixed(1)}°`;
+    } else {
+      elevStr = '—';
+    }
+  }
+
+  const dAltCol = dAlt > 0 ? '#5dc478' : dAlt < 0 ? '#e07070' : 'var(--accent)';
+  const rangeTag = inRange
+    ? `<span class="pill ok">В зоне</span>`
+    : `<span class="pill danger">Вне зоны</span>`;
+
+  body.innerHTML = `
+    <div class="result-grid">
+      <div class="result-row">
+        <span class="result-key">Азимут</span>
+        <span class="result-val big">${az.toFixed(1)}°</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Направление</span>
+        <span class="result-val">${compass} &nbsp;<span class="result-val sub">${azMil} мил</span></span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Дальность</span>
+        <span class="result-val">${Math.round(dist)} м &nbsp;${rangeTag}</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Перепад высот</span>
+        <span class="result-val" style="color:${dAltCol}">${dAlt > 0 ? '+' : ''}${Math.round(dAlt)} м</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Угол (УВН)</span>
+        <span class="result-val">${elevStr}</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Орудие</span>
+        <span class="result-val sub" style="font-size:12px">${wep.name} &nbsp;<span style="color:var(--muted)">${wep.min}–${wep.max}м</span></span>
+      </div>
+    </div>
+  `;
+  btns.style.display = 'grid';
+}
+
+/* ── copy / clear ── */
+function copyResults() {
+  if (!gun || !target) return;
+  const dist = calcDistance(gun, target);
+  const az   = calcAzimuth(gun, target);
+  const dAlt = (target.alt || 0) - (gun.alt || 0);
+  const wsel = document.getElementById('weaponSel').value;
+  const wep  = WEAPONS[wsel];
+  const text = [
+    `=== АРТА ДАННЫЕ ===`,
+    `Орудие: X${gun.x} Y${gun.y} Alt${gun.alt || 0}`,
+    `Цель:   X${target.x} Y${target.y} Alt${target.alt || 0}`,
+    `Азимут: ${az.toFixed(1)}° (${Math.round(az * 6400 / 360)} мил)`,
+    `Дальность: ${Math.round(dist)} м`,
+    `Перепад: ${dAlt > 0 ? '+' : ''}${Math.round(dAlt)} м`,
+  ].join('\n');
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+function clearAll() {
+  gun = null; target = null;
+  setPill('gunPill', 'не задана', '');
+  setPill('tgtPill', 'не задана', '');
+  document.getElementById('resultsBody').innerHTML = '<div class="no-fire">— Задайте орудие и цель —</div>';
+  document.getElementById('actionBtns').style.display = 'none';
+  draw();
+}
+
+/* ── DRAW ── */
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // bg
+  ctx.fillStyle = '#080b0d';
+  ctx.fillRect(0, 0, W, H);
+
+  // minor grid (batch single path per direction)
+  const cellPx = gridSize / scale;
+  ctx.strokeStyle = 'rgba(212,168,67,0.05)';
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([]);
+  const sX = (((- panX / scale + W/2) % cellPx) + cellPx) % cellPx;
+  const sY = (((  panY / scale + H/2) % cellPx) + cellPx) % cellPx;
+  ctx.beginPath();
+  for (let x = sX - cellPx; x < W + cellPx; x += cellPx) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+  for (let y = sY - cellPx; y < H + cellPx; y += cellPx) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+  ctx.stroke();
+
+  // major grid (10×, batch)
+  ctx.strokeStyle = 'rgba(212,168,67,0.12)';
+  const majCell = cellPx * 10;
+  const mX = (((-panX / scale + W/2) % majCell) + majCell) % majCell;
+  const mY = (((panY  / scale + H/2) % majCell) + majCell) % majCell;
+  ctx.beginPath();
+  for (let x = mX - majCell; x < W + majCell; x += majCell) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+  for (let y = mY - majCell; y < H + majCell; y += majCell) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+  ctx.stroke();
+
+  // origin cross
+  const o = worldToCanvas(0, 0);
+  ctx.strokeStyle = 'rgba(212,168,67,0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(o.x - 12, o.y); ctx.lineTo(o.x + 12, o.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(o.x, o.y - 12); ctx.lineTo(o.x, o.y + 12); ctx.stroke();
+
+  // fire line
+  if (gun && target) {
+    const gp   = worldToCanvas(gun.x, gun.y);
+    const tp   = worldToCanvas(target.x, target.y);
+    const dist = calcDistance(gun, target);
+    const az   = calcAzimuth(gun, target);
+    const wsel = document.getElementById('weaponSel').value;
+    let wep = { ...WEAPONS[wsel] };
+    if (wsel === 'custom') {
+      wep.min = parseFloat(document.getElementById('customMin').value) || 100;
+      wep.max = parseFloat(document.getElementById('customMax').value) || 5000;
+    }
+    const inRange = dist >= wep.min && dist <= wep.max;
+
+    // max range circle
+    ctx.strokeStyle = 'rgba(212,168,67,0.08)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([3, 5]);
+    ctx.beginPath(); ctx.arc(gp.x, gp.y, wep.max / scale, 0, Math.PI * 2); ctx.stroke();
+    // min range circle
+    ctx.strokeStyle = 'rgba(184,64,64,0.12)';
+    ctx.beginPath(); ctx.arc(gp.x, gp.y, wep.min / scale, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // trajectory glow
+    ctx.save();
+    ctx.strokeStyle = inRange
+      ? 'rgba(212,168,67,0.08)'
+      : 'rgba(184,64,64,0.08)';
+    ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(gp.x, gp.y); ctx.lineTo(tp.x, tp.y); ctx.stroke();
+    ctx.restore();
+
+    // main fire line
+    ctx.strokeStyle = inRange ? 'rgba(212,168,67,0.6)' : 'rgba(184,64,64,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath(); ctx.moveTo(gp.x, gp.y); ctx.lineTo(tp.x, tp.y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // azimuth arc
+    const arcR = Math.min(55, dist / scale * 0.4);
+    const northAngle = -Math.PI / 2;
+    const azAngle = northAngle + az * Math.PI / 180;
+    ctx.strokeStyle = 'rgba(212,168,67,0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(gp.x, gp.y, arcR, northAngle, azAngle, false); ctx.stroke();
+    // north dashed
+    ctx.strokeStyle = 'rgba(212,168,67,0.2)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(gp.x, gp.y); ctx.lineTo(gp.x, gp.y - arcR - 10); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // distance label
+    const mx = (gp.x + tp.x) / 2, my = (gp.y + tp.y) / 2;
+    ctx.fillStyle = '#080b0d';
+    ctx.fillRect(mx - 36, my - 10, 72, 18);
+    ctx.strokeStyle = 'rgba(212,168,67,0.2)';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(mx - 36, my - 10, 72, 18);
+    ctx.fillStyle = 'rgba(212,168,67,0.9)';
+    ctx.font = '11px "Share Tech Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.round(dist)} м`, mx, my + 4);
+  }
+
+  // draw gun
+  if (gun) {
+    const p = worldToCanvas(gun.x, gun.y);
+    ctx.save();
+    ctx.translate(p.x, p.y);
+
+    // glow
+    const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 28);
+    glow.addColorStop(0, 'rgba(212,168,67,0.2)');
+    glow.addColorStop(1, 'rgba(212,168,67,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(0, 0, 28, 0, Math.PI * 2); ctx.fill();
+
+    // outer ring
+    ctx.strokeStyle = 'rgba(212,168,67,0.3)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI * 2); ctx.stroke();
+
+    // crosshair arms
+    ctx.strokeStyle = '#d4a843';
+    ctx.lineWidth = 1.5;
+    [[-12, -4], [4, 12], [-4, -12], [4, 12]].forEach(() => {}); // noop
+    ctx.beginPath(); ctx.moveTo(-12, 0); ctx.lineTo(-5, 0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(5, 0);   ctx.lineTo(12, 0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(0, -5);  ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, 5);   ctx.lineTo(0, 12);  ctx.stroke();
+    // center
+    ctx.fillStyle = '#d4a843';
+    ctx.beginPath(); ctx.arc(0, 0, 2.5, 0, Math.PI * 2); ctx.fill();
+
+    ctx.restore();
+
+    // label
+    ctx.fillStyle = '#d4a843';
+    ctx.font = 'bold 10px "Share Tech Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('ОРУДИЕ', p.x, p.y - 26);
+    ctx.fillStyle = 'rgba(212,168,67,0.5)';
+    ctx.font = '9px "Share Tech Mono", monospace';
+    ctx.fillText(`${gun.x}, ${gun.y}`, p.x, p.y + 30);
+  }
+
+  // draw target
+  if (target) {
+    const p = worldToCanvas(target.x, target.y);
+    ctx.save();
+    ctx.translate(p.x, p.y);
+
+    // glow
+    const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 32);
+    glow.addColorStop(0, 'rgba(184,64,64,0.2)');
+    glow.addColorStop(1, 'rgba(184,64,64,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(0, 0, 32, 0, Math.PI * 2); ctx.fill();
+
+    // rings
+    [22, 30].forEach(r => {
+      ctx.strokeStyle = `rgba(184,64,64,${r === 22 ? 0.25 : 0.1})`;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
+    });
+
+    // X
+    ctx.strokeStyle = '#b84040';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-8, -8); ctx.lineTo(8, 8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(8, -8);  ctx.lineTo(-8, 8); ctx.stroke();
+    ctx.fillStyle = '#b84040';
+    ctx.beginPath(); ctx.arc(0, 0, 2.5, 0, Math.PI * 2); ctx.fill();
+
+    ctx.restore();
+
+    ctx.fillStyle = '#b84040';
+    ctx.font = 'bold 10px "Share Tech Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('ЦЕЛЬ', p.x, p.y - 36);
+    ctx.fillStyle = 'rgba(184,64,64,0.5)';
+    ctx.font = '9px "Share Tech Mono", monospace';
+    ctx.fillText(`${target.x}, ${target.y}`, p.x, p.y + 40);
+  }
+
+  // north indicator
+  const nx = W - 36, ny = 36;
+  // bg circle
+  ctx.fillStyle = 'rgba(8,11,13,0.7)';
+  ctx.beginPath(); ctx.arc(nx, ny, 20, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(212,168,67,0.2)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.arc(nx, ny, 20, 0, Math.PI * 2); ctx.stroke();
+  // arrow
+  ctx.strokeStyle = 'rgba(212,168,67,0.8)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(nx, ny + 12); ctx.lineTo(nx, ny - 12); ctx.stroke();
+  ctx.fillStyle = 'rgba(212,168,67,0.9)';
+  ctx.beginPath(); ctx.moveTo(nx - 4, ny - 5); ctx.lineTo(nx, ny - 16); ctx.lineTo(nx + 4, ny - 5); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(212,168,67,0.9)';
+  ctx.font = 'bold 10px "Share Tech Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('N', nx, ny + 20);
+}
+
+// init
+resize();
+panX = 0; panY = 0;
+draw();
+</script>
+</body>
+</html>

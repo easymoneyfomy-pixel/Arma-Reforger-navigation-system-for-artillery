@@ -1,0 +1,34 @@
+[  112430ms] [LOG] Results body HTML (500 chars): 
+    <div class="result-grid">
+      <div class="result-row">
+        <span class="result-key">Азимут</span>
+        <span class="result-val big">90.0°</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Направление</span>
+        <span class="result-val">В &nbsp;<span class="result-val sub">1600 мил</span></span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Дальность</span>
+        <span class="result-val">3000 м &nbsp;<span class= @ :0
+[  112430ms] [LOG] Results body text: АЗИМУТ 90.0° НАПРАВЛЕНИЕ В 1600 мил ДАЛЬНОСТЬ 3000 м В ЗОНЕ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :0
+[  151713ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 90.0° НАПРАВЛЕНИЕ В 1600 мил ДАЛЬНОСТЬ 3000 м В ЗОНЕ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  151714ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 90.0° НАПРАВЛЕНИЕ В 1600 мил ДАЛЬНОСТЬ 3000 м В ЗОНЕ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  174362ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 90.0° НАПРАВЛЕНИЕ В 1600 мил ДАЛЬНОСТЬ 3000 м В ЗОНЕ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  431094ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 90.0° НАПРАВЛЕНИЕ В 1600 мил ДАЛЬНОСТЬ 3000 м В ЗОНЕ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  431528ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 173.4° НАПРАВЛЕНИЕ Ю 3083 мил ДАЛЬНОСТЬ 2099 м В ЗОНЕ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  431753ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 107.7° НАПРАВЛЕНИЕ В 1914 мил ДАЛЬНОСТЬ 3212 м В ЗОНЕ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  431952ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 84.3° НАПРАВЛЕНИЕ В 1499 мил ДАЛЬНОСТЬ 4813 м В ЗОНЕ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  432251ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= — ЗАДАЙТЕ ОРУДИЕ И ЦЕЛЬ — @ :9
+[  432515ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 59.6° НАПРАВЛЕНИЕ СВ 1060 мил ДАЛЬНОСТЬ 3211 м В ЗОНЕ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  432676ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 59.6° НАПРАВЛЕНИЕ СВ 1060 мил ДАЛЬНОСТЬ 3175 м В ЗОНЕ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  432880ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= — ЗАДАЙТЕ ОРУДИЕ И ЦЕЛЬ — @ :9
+[  433075ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= — ЗАДАЙТЕ ОРУДИЕ И ЦЕЛЬ — @ :9
+[  433391ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= — ЗАДАЙТЕ ОРУДИЕ И ЦЕЛЬ — @ :9
+[  433671ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= — ЗАДАЙТЕ ОРУДИЕ И ЦЕЛЬ — @ :9
+[  433740ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= — ЗАДАЙТЕ ОРУДИЕ И ЦЕЛЬ — @ :9
+[  434107ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 17.1° НАПРАВЛЕНИЕ С 304 мил ДАЛЬНОСТЬ 68 м ВНЕ ЗОНЫ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  434293ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 319.0° НАПРАВЛЕНИЕ СЗ 5671 мил ДАЛЬНОСТЬ 152 м ВНЕ ЗОНЫ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  434509ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 319.0° НАПРАВЛЕНИЕ СЗ 5671 мил ДАЛЬНОСТЬ 152 м ВНЕ ЗОНЫ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  434697ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 17.1° НАПРАВЛЕНИЕ С 304 мил ДАЛЬНОСТЬ 204 м ВНЕ ЗОНЫ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
+[  434873ms] [LOG] DEBUG recalc: wsel= d30 weaponName= D30 results= АЗИМУТ 78.9° НАПРАВЛЕНИЕ В 1402 мил ДАЛЬНОСТЬ 2252 м В ЗОНЕ ПЕРЕПАД ВЫСОТ 0 м УГОЛ (УВН) 0.0° ОРУДИЕ Д-30 122мм 400–15300м @ :9
